@@ -122,4 +122,4 @@ This might get frustrating if you are forced to use a `div`, but have to wrap it
 
 --
 
-That's it for the first devlog. You can checkout the source code over at
+That's it for the first devlog. You can checkout the source code [here](https://github.com/Orasund/littleWorldPuzzler/tree/4a36a09e59ed769ae490965a551edda2f82f4f30/DevLog1).
