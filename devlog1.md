@@ -84,7 +84,7 @@ To get a complete picture, we also have to look at the fire card:
 ```
 Rules (Fire)
  🟰🔥➕🌊 (Fire disappears next to water)
-🔥⬅️🔥➕🔥 (Fire that is next to fire will add fire to the deck)
+🔥⬅️🔥➕🔥🔥🔥🔥 (Fire that is next to fire will add fire to the deck)
 ```
 
 With this, we have the first few cards and mechanics.
