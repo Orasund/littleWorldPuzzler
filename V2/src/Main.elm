@@ -12,17 +12,20 @@ import Layout
 type alias Model =
     { world : Dict ( Int, Int ) Card
     , deck : List Card
+    , points : Int
     }
 
 
 type Msg
     = ClickedAt ( Int, Int )
+    | BoughtCard Card
 
 
 init : () -> ( Model, Cmd Msg )
 init () =
     ( { world = Dict.empty
-      , deck = [ Card.Tree, Card.Water, Card.Fire ]
+      , deck = [ Card.Tree, Card.Water, Card.Fire, Card.Rabbit ]
+      , points = 0
       }
     , Cmd.none
     )
@@ -72,6 +75,25 @@ view model =
                     |> String.concat
                )
             |> Html.text
+            |> Layout.el []
+        , "Points: "
+            ++ String.fromInt model.points
+            |> Html.text
+            |> Layout.el []
+        , Card.asList
+            |> List.map
+                (\card ->
+                    "Buy "
+                        ++ Card.emoji card
+                        |> Html.text
+                        |> Layout.buttonEl
+                            { onPress = Just (BoughtCard card)
+                            , label = "Buy " ++ Card.emoji card
+                            }
+                            []
+                        |> Layout.el []
+                )
+            |> Layout.column []
         ]
     }
 
@@ -118,6 +140,7 @@ update msg model =
                                 { model
                                     | world = world
                                     , deck = deck ++ newCards
+                                    , points = model.points + List.length newCards
                                 }
                            )
                     , Cmd.none
@@ -125,6 +148,18 @@ update msg model =
 
                 [] ->
                     ( model, Cmd.none )
+
+        BoughtCard card ->
+            if model.points >= Card.price card then
+                ( { model
+                    | deck = model.deck ++ [ card ]
+                    , points = model.points - Card.price card
+                  }
+                , Cmd.none
+                )
+
+            else
+                ( model, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg

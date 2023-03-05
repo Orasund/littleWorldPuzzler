@@ -28,11 +28,11 @@ This way I had space to add mechanics to other cards that I wanted to add later.
 
 A good example for this is the “base” card of the game: 🌊 Water.
 
-```
-Rules
-🌊➕🔥🔥➡️ (Water disapears if it has at least two neighboring fires)
-🌊➕❄➡️❄ (Water turns into ice if it is next to ice)
- ➕🌊➡️🌳 (an empty tile will turn into a tree if its next to water)
+
+**Rules**
+* Water disapears if it has at least two neighboring fires
+* Water turns into ice if it is next to ice
+* A empty tile will turn into a tree if its next to water
 ```
 
 The last rule is the main mechanic: Water spawns trees.
@@ -57,21 +57,19 @@ You can think of it as one “mechanic” and one “challenge”. Where the cha
 
 So the two new rules for Water will be the following:
 
-```
-Rules (Water)
- 🟰🌊  (Water always disappears next turn.)
-🌊⬅️🌊 (Water always adds water into your deck.)
-```
+**Rules (Water)**
+* Water always disappears next turn.
+* Water always adds water into your deck.
+
 
 This will give you the feeling, that water is constantly moving.
 
 Now you might wonder where the tree mechanic went. Well, let's look at the rule of that card:
 
-```
-Rules (Tree)
-🔥🟰🌳➕🔥 (Trees disappear when next to fire)
-🌳⬅️🌳➕🌊 (Trees that are next to water add a tree into your deck)
-```
+**Rules (Tree)**
+* Trees disappear when next to fire
+* Trees that are next to water add a tree into your deck
+
 
 You can see that the idea is the same, but the rules are really focused on the individual card.
 
@@ -81,10 +79,9 @@ In the old version, adding the evergreen was a nightmare.
 
 To get a complete picture, we also have to look at the fire card:
 
-```
-Rules (Fire)
- 🟰🔥➕🌊 (Fire disappears next to water)
-🔥⬅️🔥➕🔥🔥🔥🔥 (Fire that is next to fire will add fire to the deck)
+**Fire**
+* Fire disappears next to water
+* Fire that is surrounded by fire will add fire to the deck
 ```
 
 With this, we have the first few cards and mechanics.
