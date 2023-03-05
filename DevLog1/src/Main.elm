@@ -47,9 +47,7 @@ view model =
                                                 |> Html.text
                                                 |> Layout.el
                                                     (Layout.asButton
-                                                        { onPress =
-                                                            ClickedAt ( x, y )
-                                                                |> Just
+                                                        { onPress = ClickedAt ( x, y ) |> Just
                                                         , label =
                                                             maybeCard
                                                                 |> Maybe.map Card.emoji

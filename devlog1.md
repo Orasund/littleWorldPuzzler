@@ -90,3 +90,36 @@ Rules (Fire)
 With this, we have the first few cards and mechanics.
 Next we can go along and implement a first prototype.
 
+[![First draft](https://orasund.github.io/littleWorldPuzzler/devlog/1/game.png)](https://orasund.github.io/littleWorldPuzzler/devlog/1/)
+
+_(Click to play)_
+
+The result is actually better then expected. The three cards feel very powerful and its actually a nice challenge to keep the system alive for as long as possible.
+
+Now ever, the game is a bit to hard for my liking and i might want to introduce a mechanic for getting cards back, that you lost. But that will be discussed in a different devlog.
+
+## Implementing the first draft
+
+The first draft was actually done quite straight forward. I didn't introduce any abstraction and always sticked to the most direct solution. I will abstract away and introduce patterns. But for this draft i wanted to have some small that should not raise any questions.
+
+However, i snuck one small library of mine into the code: [Orasund/elm-layout](https://package.elm-lang.org/packages/Orasund/elm-layout/latest/). It's just a wrapper around Flexbox but using names taken from Elm-ui. It was meant to be a elm-ui inspired html-library.
+
+I used the functions `Layout.row` and `Layout.column` to create the grid and `Layout.centered` for centering the emojis in the cell.
+A small function that i also include into the libary is `Layout.asButton`, which turns any flexbox node into a button.
+
+```
+Layout.asButton
+    { onPress =  ClickedAt ( x, y ) |> Just
+    , label =
+        maybeCard
+            |> Maybe.map Card.emoji
+            |> Maybe.withDefault " "
+    }
+```
+
+The API is heavily taken from elm-ui, but the flexibility of it is crazy. In Elm-ui, buttons are always using `Html.button`.
+This might get frustrating if you are forced to use a `div`, but have to wrap it into a button just to make it behave like a button.
+
+--
+
+That's it for the first devlog. You can checkout the source code over at
