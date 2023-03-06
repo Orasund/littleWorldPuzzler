@@ -6,11 +6,12 @@ type Card
     | Water
     | Tree
     | Rabbit
+    | Wolf
 
 
 asList : List Card
 asList =
-    [ Fire, Water, Tree, Rabbit ]
+    [ Fire, Water, Tree, Rabbit, Wolf ]
 
 
 emoji : Card -> String
@@ -26,7 +27,10 @@ emoji card =
             "🌳"
 
         Rabbit ->
-            "🐇"
+            "🐰"
+
+        Wolf ->
+            "🐺"
 
 
 transform : List Card -> Card -> Maybe Card
@@ -50,16 +54,18 @@ transform neighbors card =
                 Just card
 
         Rabbit ->
-            if
-                neighbors
-                    |> List.filter ((==) Tree)
-                    |> List.length
-                    |> (\int -> int >= 2)
-            then
-                Just card
+            if List.member Wolf neighbors then
+                Just Wolf
 
             else
+                Just card
+
+        Wolf ->
+            if not (List.member Rabbit neighbors) then
                 Nothing
+
+            else
+                Just card
 
 
 produce : List Card -> Card -> Maybe Card
@@ -98,6 +104,13 @@ produce neighbors card =
             else
                 Nothing
 
+        Wolf ->
+            if [ Rabbit, Rabbit, Rabbit, Rabbit ] == neighbors then
+                Just Wolf
+
+            else
+                Nothing
+
 
 price : Card -> Int
 price card =
@@ -113,3 +126,6 @@ price card =
 
         Rabbit ->
             10
+
+        Wolf ->
+            15
