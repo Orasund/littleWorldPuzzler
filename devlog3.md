@@ -28,7 +28,7 @@ button:active {
 
 Why do i even need a stylesheet, you might ask. Well there are two things that are impossible to do without: styling the body node and styling buttons.
 
-Im setting the height of the body to 100%, so that i can just ignore it afterwards.
+I'm setting the height of the body to 100%, so that i can just ignore it going forward.
 
 For styling buttons i like to just add a generic filter over it. This way i can still individually style different buttons and get the animations for hovering, focusing and activating for free.
 
@@ -73,15 +73,15 @@ The wolf will feed on the rabbit. It eats rabbits to survive and dies if no rabb
 
 This concept would have been quite easy to pull off in the old version of the game. But this time im not sure how i can achive this mechanic with just 2 rules. So i have to get a bit creative.
 
-**Rules (Wolf)**
-* Wolfs reproduce when next to 4 Rabbits
-* Wolfs die if not next to rabbits
+**Rules (🐺Wolf)**
+* 🐺Wolfs reproduce when next to 4 🐰Rabbits
+* 🐺Wolfs die if not next to 🐰rabbits
 
-Now this might look good, but the rabbit isn't killed. So now i have to go back to the rabbit and change the rule for killing a rabbit
+Now this might look good, but the rabbit isn't killed. So now i have to go back to the rabbit and change the rule for killing it
 
-**Rules (Rabbit)**
-* Rabbits reproduce when next to at least 2 trees
-* Rabbits turn into wolfs when next to wolfs.
+**Rules (🐰Rabbit)**
+* 🐰Rabbits reproduce when next to at least 2 🌳trees
+* 🐰Rabbits turn into 🐺wolfs when next to 🐺wolfs.
 
 ---
 
