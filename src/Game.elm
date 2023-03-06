@@ -14,7 +14,7 @@ type alias Game =
 init : Game
 init =
     { world = Dict.empty
-    , deck = [ Card.Tree, Card.Water, Card.Fire, Card.Rabbit ]
+    , deck = [ Card.Tree, Card.Water, Card.Fire ]
     , points = 0
     }
 

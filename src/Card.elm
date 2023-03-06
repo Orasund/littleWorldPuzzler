@@ -7,6 +7,7 @@ type Card
     | Tree
     | Rabbit
     | Wolf
+    | Volcano
 
 
 asList : List Card
@@ -16,6 +17,7 @@ asList =
     , Tree
     , Rabbit
     , Wolf
+    , Volcano
     ]
 
 
@@ -37,6 +39,9 @@ emoji card =
         Wolf ->
             "🐺"
 
+        Volcano ->
+            "🌋"
+
 
 transform : Card -> ( Maybe Card, List Card -> Bool )
 transform card =
@@ -56,6 +61,9 @@ transform card =
         Wolf ->
             ( Nothing, List.member Rabbit )
 
+        Volcano ->
+            ( Nothing, List.member Fire )
+
 
 produces : Card -> ( Card, List Card -> Bool )
 produces card =
@@ -67,7 +75,7 @@ produces card =
             ( card, List.member Water )
 
         Fire ->
-            ( card, (==) [ Fire, Fire, Fire, Fire ] )
+            ( card, (==) (List.repeat 4 Fire) )
 
         Rabbit ->
             ( card
@@ -79,7 +87,10 @@ produces card =
             )
 
         Wolf ->
-            ( card, (==) [ Rabbit, Rabbit, Rabbit, Rabbit ] )
+            ( card, (==) (List.repeat 4 Rabbit) )
+
+        Volcano ->
+            ( Fire, always True )
 
 
 price : Card -> Int
@@ -99,3 +110,6 @@ price card =
 
         Wolf ->
             15
+
+        Volcano ->
+            30

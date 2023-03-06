@@ -98,7 +98,7 @@ After playing the game, I noticed that by not being able to loose water, you act
 
 _(Click to play)_
 
---
+---
 
 This it for now. We now know that the core mechanic works and that it is fun. This means we can actually spend some time making the game a bit prettier.
 
