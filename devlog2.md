@@ -33,6 +33,12 @@ I didn't end up actually implementing it that way. I wanted to make it more inte
 
 I also gave cards different prices: Water is worth 20 points, everything else is 10 points. That's because you can't loose your water card.
 
-After playing the game, i noticed that by not being able to loose water, you actually can't "loose" the game. So i tweaked the rule, such that water always needs to be placed next to something for it to spawn more water.
+After playing the game, I noticed that by not being able to loose water, you actually can't "loose" the game. So i tweaked the rule, such that water always needs to be placed next to something for it to spawn more water.
 
-![Adding the Shop](https://orasund.github.io/littleWorldPuzzler/devlog/2/game.png)
+[![Adding the Shop](https://orasund.github.io/littleWorldPuzzler/devlog/2/game.png)](https://orasund.github.io/littleWorldPuzzler/devlog/2/)
+
+--
+
+This it for now. We now know that the core mechanic works and is fun. This means we can actually spend some time making the game a bit prettier.
+
+You can find the source code [here](https://github.com/Orasund/littleWorldPuzzler/tree/3b40756e4d8ed57f8e59c59c47d33903155efff4/V2)
