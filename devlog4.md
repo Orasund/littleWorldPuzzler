@@ -112,4 +112,4 @@ _Click to play_
 
 ---
 
-And with that, the devlog is over again. You can [checkout the source code](https://github.com/Orasund/littleWorldPuzzler/tree/9d912ac729ac1ded60f51f701d83345c15feac0e/src) as usual. I also have made a PR, if you want to see the changes from last time.
+And with that, the devlog is over again. You can [checkout the source code](https://github.com/Orasund/littleWorldPuzzler/tree/9d912ac729ac1ded60f51f701d83345c15feac0e/src) as usual. I also [opened a PR](https://github.com/Orasund/littleWorldPuzzler/pull/2), if you want to see the changes from last time.
