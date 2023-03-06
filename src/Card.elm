@@ -7,11 +7,18 @@ type Card
     | Tree
     | Rabbit
     | Wolf
+    | Volcano
 
 
 asList : List Card
 asList =
-    [ Fire, Water, Tree, Rabbit, Wolf ]
+    [ Water
+    , Fire
+    , Tree
+    , Rabbit
+    , Wolf
+    , Volcano
+    ]
 
 
 emoji : Card -> String
@@ -32,84 +39,58 @@ emoji card =
         Wolf ->
             "🐺"
 
+        Volcano ->
+            "🌋"
 
-transform : List Card -> Card -> Maybe Card
-transform neighbors card =
+
+transform : Card -> ( Maybe Card, List Card -> Bool )
+transform card =
     case card of
         Water ->
-            Nothing
+            ( Nothing, always True )
 
         Tree ->
-            if List.member Fire neighbors then
-                Just Fire
-
-            else
-                Just card
+            ( Just Fire, List.member Fire )
 
         Fire ->
-            if List.member Water neighbors then
-                Nothing
-
-            else
-                Just card
+            ( Nothing, List.member Water )
 
         Rabbit ->
-            if List.member Wolf neighbors then
-                Just Wolf
-
-            else
-                Just card
+            ( Just Wolf, List.member Wolf )
 
         Wolf ->
-            if not (List.member Rabbit neighbors) then
-                Nothing
+            ( Nothing, List.member Rabbit )
 
-            else
-                Just card
+        Volcano ->
+            ( Nothing, List.member Fire )
 
 
-produce : List Card -> Card -> Maybe Card
-produce neighbors card =
+produces : Card -> ( Card, List Card -> Bool )
+produces card =
     case card of
         Water ->
-            if neighbors /= [] then
-                Just Water
-
-            else
-                Nothing
+            ( card, (/=) [] )
 
         Tree ->
-            if List.member Water neighbors then
-                Just Tree
-
-            else
-                Nothing
+            ( card, List.member Water )
 
         Fire ->
-            if [ Fire, Fire, Fire, Fire ] == neighbors then
-                Just Fire
-
-            else
-                Nothing
+            ( card, (==) (List.repeat 4 Fire) )
 
         Rabbit ->
-            if
+            ( card
+            , \neighbors ->
                 neighbors
                     |> List.filter ((==) Tree)
                     |> List.length
                     |> (\int -> int >= 2)
-            then
-                Just Rabbit
-
-            else
-                Nothing
+            )
 
         Wolf ->
-            if [ Rabbit, Rabbit, Rabbit, Rabbit ] == neighbors then
-                Just Wolf
+            ( card, (==) (List.repeat 4 Rabbit) )
 
-            else
-                Nothing
+        Volcano ->
+            ( Fire, always True )
 
 
 price : Card -> Int
@@ -129,3 +110,6 @@ price card =
 
         Wolf ->
             15
+
+        Volcano ->
+            30

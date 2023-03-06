@@ -83,7 +83,7 @@ Now this might look good, but the rabbit isn't killed. So now i have to go back 
 * Rabbits reproduce when next to at least 2 trees
 * Rabbits turn into wolfs when next to wolfs.
 
---
+---
 
 I really feel the urge to write down the DSL and start formalizing the rules. So maybe let's do this in the next devlog.
 
