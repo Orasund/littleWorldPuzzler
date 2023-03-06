@@ -7,6 +7,7 @@ import Dict exposing (Dict)
 import Html
 import Html.Attributes
 import Layout
+import View
 
 
 type alias Model =
@@ -35,65 +36,90 @@ view : Model -> Document Msg
 view model =
     { title = "Little World Puzzler"
     , body =
-        [ List.range 0 (Config.worldSize - 1)
-            |> List.map
-                (\y ->
-                    List.range 0 (Config.worldSize - 1)
-                        |> List.map
-                            (\x ->
-                                model.world
-                                    |> Dict.get ( x, y )
-                                    |> (\maybeCard ->
-                                            maybeCard
-                                                |> Maybe.map Card.emoji
-                                                |> Maybe.withDefault ""
-                                                |> Html.text
-                                                |> Layout.el
-                                                    (Layout.asButton
-                                                        { onPress = ClickedAt ( x, y ) |> Just
+        [ [ "Points: "
+                ++ String.fromInt model.points
+                |> Html.text
+                |> Layout.el []
+          , List.range 0 (Config.worldSize - 1)
+                |> List.map
+                    (\y ->
+                        List.range 0 (Config.worldSize - 1)
+                            |> List.map
+                                (\x ->
+                                    model.world
+                                        |> Dict.get ( x, y )
+                                        |> (\maybeCard ->
+                                                maybeCard
+                                                    |> Maybe.map Card.emoji
+                                                    |> Maybe.withDefault ""
+                                                    |> Html.text
+                                                    |> Layout.buttonEl
+                                                        { onPress =
+                                                            if maybeCard == Nothing then
+                                                                ClickedAt ( x, y ) |> Just
+
+                                                            else
+                                                                Nothing
                                                         , label =
                                                             maybeCard
                                                                 |> Maybe.map Card.emoji
                                                                 |> Maybe.withDefault " "
                                                         }
-                                                        ++ Layout.centered
-                                                        ++ [ Html.Attributes.style "width" "32px"
-                                                           , Html.Attributes.style "height" "32px"
-                                                           , Html.Attributes.style
-                                                                "border"
-                                                                "1px solid rgba(0,0,0,0.2)"
-                                                           ]
-                                                    )
-                                       )
-                            )
-                        |> Layout.row []
+                                                        (Layout.centered
+                                                            ++ [ Html.Attributes.style "width" "64px"
+                                                               , Html.Attributes.style "height" "64px"
+                                                               , Html.Attributes.style "border-radius" "16px"
+                                                               , Html.Attributes.style "font-size" "48px"
+                                                               , Html.Attributes.style
+                                                                    "border"
+                                                                    "1px solid rgba(0,0,0,0.2)"
+                                                               ]
+                                                        )
+                                           )
+                                )
+                            |> Layout.row [ Layout.spacing 8 ]
+                    )
+                |> Layout.column [ Layout.spacing 8 ]
+          , "Next: "
+                ++ (model.deck
+                        |> List.map Card.emoji
+                        |> String.concat
+                   )
+                |> Html.text
+                |> Layout.el []
+          , Card.asList
+                |> List.map
+                    (\card ->
+                        Card.emoji card
+                            ++ " for "
+                            ++ String.fromInt (Card.price card)
+                            |> View.button (Just (BoughtCard card))
+                    )
+                |> Layout.row []
+          ]
+            |> Layout.column
+                ([ Html.Attributes.style "height" "100%"
+                 , Layout.spacing 32
+                 ]
+                    ++ Layout.centered
                 )
-            |> Layout.column []
-        , "Next: "
-            ++ (model.deck
-                    |> List.map Card.emoji
-                    |> String.concat
-               )
-            |> Html.text
-            |> Layout.el []
-        , "Points: "
-            ++ String.fromInt model.points
-            |> Html.text
-            |> Layout.el []
-        , Card.asList
-            |> List.map
-                (\card ->
-                    "Buy "
-                        ++ Card.emoji card
-                        |> Html.text
-                        |> Layout.buttonEl
-                            { onPress = Just (BoughtCard card)
-                            , label = "Buy " ++ Card.emoji card
-                            }
-                            []
-                        |> Layout.el []
-                )
-            |> Layout.column []
+        , Html.node "style" [] [ Html.text """
+:root, body {
+    height: 100%
+} 
+
+button:hover {
+    filter: brightness(0.95)
+}
+
+button:focus {
+    filter: brightness(0.90)
+}
+
+button:active {
+    filter: brightness(0.7)
+}
+""" ]
         ]
     }
 
