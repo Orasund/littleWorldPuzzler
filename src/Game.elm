@@ -2,21 +2,59 @@ module Game exposing (..)
 
 import Card exposing (Card)
 import Dict exposing (Dict)
+import Random exposing (Generator)
 
 
 type alias Game =
     { world : Dict ( Int, Int ) Card
+    , selected : Maybe Card
     , deck : List Card
     , points : Int
     }
 
 
+shuffle : List a -> Generator (List a)
+shuffle list =
+    Random.list (List.length list) (Random.float 0 1)
+        |> Random.map
+            (\randomList ->
+                randomList
+                    |> List.map2 Tuple.pair list
+                    |> List.sortBy Tuple.second
+                    |> List.map Tuple.first
+            )
+
+
 init : Game
 init =
     { world = Dict.empty
-    , deck = [ Card.Tree, Card.Water, Card.Fire ]
+    , selected = Nothing
+    , deck =
+        [ Card.Tree, Card.Water, Card.Fire ]
+            |> List.concatMap (List.repeat 2)
     , points = 0
     }
+
+
+drawCard : Game -> Generator Game
+drawCard game =
+    game.deck
+        |> shuffle
+        |> Random.map
+            (\list ->
+                case list of
+                    head :: tail ->
+                        { game
+                            | selected = Just head
+                            , deck = tail
+                        }
+
+                    [] ->
+                        { game
+                            | selected = Nothing
+                            , deck = []
+                        }
+            )
 
 
 buyCard : Card -> Game -> Game
@@ -73,20 +111,21 @@ tick world =
             ( world, [] )
 
 
-placeCard : ( Int, Int ) -> Game -> Game
+placeCard : ( Int, Int ) -> Game -> Generator Game
 placeCard pos game =
-    case game.deck of
-        card :: deck ->
+    case game.selected of
+        Just card ->
             game.world
                 |> Dict.insert pos card
                 |> tick
                 |> (\( world, newCards ) ->
                         { game
                             | world = world
-                            , deck = deck ++ newCards
+                            , deck = game.deck ++ newCards
                             , points = game.points + List.length newCards
                         }
+                            |> drawCard
                    )
 
-        [] ->
-            game
+        Nothing ->
+            Random.constant game

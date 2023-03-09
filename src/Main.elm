@@ -87,13 +87,25 @@ view model =
                             |> Layout.row [ Layout.spacing 8 ]
                     )
                 |> Layout.column [ Layout.spacing 8 ]
-          , "Next: "
+          , [ "Selected:"
+                ++ (model.game.selected
+                        |> Maybe.map Card.emoji
+                        |> Maybe.withDefault ""
+                   )
+                |> Html.text
+                |> Layout.el []
+            , "Deck: "
                 ++ (model.game.deck
                         |> List.map Card.emoji
                         |> String.concat
                    )
                 |> Html.text
                 |> Layout.el []
+            ]
+                |> Layout.row
+                    [ Layout.spaceBetween
+                    , Html.Attributes.style "width" "100%"
+                    ]
           , [ "Buy Cards" |> Html.text |> Layout.el []
             , Card.asList
                 |> List.map
@@ -149,9 +161,14 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ClickedAt pos ->
-            ( model.game
-                |> Game.placeCard pos
-                |> (\it -> { model | game = it })
+            ( model.seed
+                |> Random.step (Game.placeCard pos model.game)
+                |> (\( game, seed ) ->
+                        { model
+                            | game = game
+                            , seed = seed
+                        }
+                   )
             , Cmd.none
             )
 
@@ -162,10 +179,16 @@ update msg model =
             , Cmd.none
             )
 
-        Restart seed ->
-            ( { model | game = Game.init, seed = seed }
-            , Cmd.none
-            )
+        Restart initialSeed ->
+            Random.step (Game.drawCard Game.init) initialSeed
+                |> (\( game, seed ) ->
+                        ( { model
+                            | game = game
+                            , seed = seed
+                          }
+                        , Cmd.none
+                        )
+                   )
 
 
 subscriptions : Model -> Sub Msg
