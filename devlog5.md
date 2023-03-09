@@ -90,3 +90,7 @@ and it produces more snow, if it touches water.
 ```
 ( Snow, List.member Water )
 ```
+
+---
+
+And with that, the devlog is over again. You can [checkout the source code](https://github.com/Orasund/littleWorldPuzzler/tree/418978effb24bc138f4ba3c7f92342e1da7d7133) as usual.
