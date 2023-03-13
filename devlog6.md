@@ -62,3 +62,7 @@ One important game mechanic is that some cards will start producing new cards in
 ## No new card for this devlog
 
 I was thinking if i wanted to add another card for this devlog, but decided against it. I haven't actually tried out the existing cards that much. I will probably stop adding cards for now until I have a better feeling of the existing mechanics in the game.
+
+---
+
+And thats it again. You can find [the source code here](https://github.com/Orasund/littleWorldPuzzler/tree/2ffaf6e76bbcb8eae27f6153affc100a7148ea67) and also the [PR](https://github.com/Orasund/littleWorldPuzzler/pull/4) with the difference to the last devlog.
