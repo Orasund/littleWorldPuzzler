@@ -1,6 +1,7 @@
 module Game exposing (..)
 
 import Card exposing (Card)
+import Config
 import Dict exposing (Dict)
 import Random exposing (Generator)
 
@@ -11,6 +12,10 @@ type alias Game =
     , deck : List Card
     , points : Int
     }
+
+
+type Effect
+    = OpenShop
 
 
 shuffle : List a -> Generator (List a)
@@ -30,10 +35,22 @@ init =
     { world = Dict.empty
     , selected = Nothing
     , deck =
-        [ Card.Tree, Card.Water, Card.Fire ]
-            |> List.concatMap (List.repeat 2)
+        [ Card.Tree, Card.Tree, Card.Water, Card.Water, Card.Fire ]
     , points = 0
     }
+
+
+runEnded : Game -> Bool
+runEnded game =
+    (game.deck == [])
+        || (List.range 0 (Config.worldSize - 1)
+                |> List.concatMap
+                    (\x ->
+                        List.range 0 (Config.worldSize - 1)
+                            |> List.map (Tuple.pair x)
+                    )
+                |> List.all (\p -> Dict.get p game.world /= Nothing)
+           )
 
 
 drawCard : Game -> Generator Game
@@ -111,7 +128,7 @@ tick world =
             ( world, [] )
 
 
-placeCard : ( Int, Int ) -> Game -> Generator Game
+placeCard : ( Int, Int ) -> Game -> Generator ( Game, List Effect )
 placeCard pos game =
     case game.selected of
         Just card ->
@@ -124,8 +141,24 @@ placeCard pos game =
                             , deck = game.deck ++ newCards
                             , points = game.points + List.length newCards
                         }
-                            |> drawCard
+                            |> (\g ->
+                                    if g |> runEnded then
+                                        ( { g
+                                            | world = Dict.empty
+                                            , selected = Nothing
+                                            , deck = []
+                                            , points = g.points + Config.worldSize * Config.worldSize
+                                          }
+                                        , [ OpenShop ]
+                                        )
+                                            |> Random.constant
+
+                                    else
+                                        g
+                                            |> drawCard
+                                            |> Random.map (\it -> ( it, [] ))
+                               )
                    )
 
         Nothing ->
-            Random.constant game
+            Random.constant ( game, [] )
