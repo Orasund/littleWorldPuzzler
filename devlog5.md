@@ -93,4 +93,4 @@ and it produces more snow, if it touches water.
 
 ---
 
-And with that, the devlog is over again. You can [checkout the source code](https://github.com/Orasund/littleWorldPuzzler/tree/418978effb24bc138f4ba3c7f92342e1da7d7133) as usual.
+And with that, the devlog is over again. You can [checkout the source code](https://github.com/Orasund/littleWorldPuzzler/tree/418978effb24bc138f4ba3c7f92342e1da7d7133) and the [PR](https://github.com/Orasund/littleWorldPuzzler/pull/3) as usual.
