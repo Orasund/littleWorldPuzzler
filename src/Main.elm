@@ -4,7 +4,7 @@ import Browser exposing (Document)
 import Card exposing (Card)
 import Config
 import Dict
-import Game exposing (Game)
+import Game exposing (Effect(..), Game)
 import Html
 import Html.Attributes
 import Layout
@@ -15,6 +15,7 @@ import View
 type alias Model =
     { game : Game
     , seed : Seed
+    , viewShop : Bool
     }
 
 
@@ -22,12 +23,14 @@ type Msg
     = ClickedAt ( Int, Int )
     | BoughtCard Card
     | Restart Seed
+    | CloseShop
 
 
 init : () -> ( Model, Cmd Msg )
 init () =
     ( { game = Game.init
       , seed = Random.initialSeed 42
+      , viewShop = False
       }
     , Random.generate Restart Random.independentSeed
     )
@@ -47,24 +50,47 @@ view model =
                     [ Layout.contentWithSpaceBetween
                     , Html.Attributes.style "width" "100%"
                     ]
-          , List.range 0 (Config.worldSize - 1)
-                |> List.map
-                    (\y ->
-                        List.range 0 (Config.worldSize - 1)
-                            |> List.map
-                                (\x ->
-                                    model.game.world
-                                        |> Dict.get ( x, y )
-                                        |> (\maybeCard ->
-                                                View.cell
-                                                    { clicked = ClickedAt ( x, y )
-                                                    }
-                                                    maybeCard
-                                           )
-                                )
-                            |> Layout.row [ Layout.gap 8 ]
+          , (if model.viewShop then
+                [ "Buy Cards" |> Html.text |> Layout.el []
+                , Card.asList
+                    |> List.map
+                        (\card ->
+                            Card.emoji card
+                                ++ " for "
+                                ++ String.fromInt (Card.price card)
+                                |> View.button (Just (BoughtCard card))
+                        )
+                    |> Layout.row [ Layout.gap 8 ]
+                , View.button (Just CloseShop) "Close"
+                ]
+
+             else
+                List.range 0 (Config.worldSize - 1)
+                    |> List.map
+                        (\y ->
+                            List.range 0 (Config.worldSize - 1)
+                                |> List.map
+                                    (\x ->
+                                        model.game.world
+                                            |> Dict.get ( x, y )
+                                            |> (\maybeCard ->
+                                                    View.cell
+                                                        { clicked = ClickedAt ( x, y )
+                                                        , neighbors =
+                                                            Game.neighborsOf ( x, y )
+                                                                |> List.filterMap
+                                                                    (\p -> Dict.get p model.game.world)
+                                                        }
+                                                        maybeCard
+                                               )
+                                    )
+                                |> Layout.row [ Layout.gap 8 ]
+                        )
+            )
+                |> Layout.column
+                    ([ Layout.fill, Layout.gap 8 ]
+                        ++ Layout.centered
                     )
-                |> Layout.column [ Layout.gap 8 ]
           , [ "Selected:"
                 ++ (model.game.selected
                         |> Maybe.map Card.emoji
@@ -84,21 +110,6 @@ view model =
                     [ Layout.contentWithSpaceBetween
                     , Html.Attributes.style "width" "100%"
                     ]
-          , [ "Buy Cards" |> Html.text |> Layout.el []
-            , Card.asList
-                |> List.map
-                    (\card ->
-                        Card.emoji card
-                            ++ " for "
-                            ++ String.fromInt (Card.price card)
-                            |> View.button (Just (BoughtCard card))
-                    )
-                |> Layout.row [ Layout.gap 8 ]
-            ]
-                |> Layout.column
-                    (Layout.gap 8
-                        :: Layout.centered
-                    )
           ]
             |> Layout.column
                 ([ Layout.gap 32
@@ -135,17 +146,26 @@ button:active {
     }
 
 
+applyEffect : Effect -> Model -> Model
+applyEffect effect model =
+    case effect of
+        OpenShop ->
+            { model | viewShop = True }
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ClickedAt pos ->
             ( model.seed
                 |> Random.step (Game.placeCard pos model.game)
-                |> (\( game, seed ) ->
-                        { model
-                            | game = game
-                            , seed = seed
-                        }
+                |> (\( ( game, effects ), seed ) ->
+                        effects
+                            |> List.foldl applyEffect
+                                { model
+                                    | game = game
+                                    , seed = seed
+                                }
                    )
             , Cmd.none
             )
@@ -163,6 +183,18 @@ update msg model =
                         ( { model
                             | game = game
                             , seed = seed
+                          }
+                        , Cmd.none
+                        )
+                   )
+
+        CloseShop ->
+            Random.step (Game.drawCard model.game) model.seed
+                |> (\( game, seed ) ->
+                        ( { model
+                            | game = game
+                            , seed = seed
+                            , viewShop = False
                           }
                         , Cmd.none
                         )

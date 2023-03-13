@@ -91,6 +91,8 @@ and it produces more snow, if it touches water.
 ( Snow, List.member Water )
 ```
 
+[![Current Progress](https://orasund.github.io/littleWorldPuzzler/devlog/5/game.png)](https://orasund.github.io/littleWorldPuzzler/devlog/5/) 
+
 ---
 
 And with that, the devlog is over again. You can [checkout the source code](https://github.com/Orasund/littleWorldPuzzler/tree/418978effb24bc138f4ba3c7f92342e1da7d7133) and the [PR](https://github.com/Orasund/littleWorldPuzzler/pull/3) as usual.

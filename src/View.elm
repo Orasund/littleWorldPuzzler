@@ -18,7 +18,7 @@ button onPress label =
             }
 
 
-cell : { clicked : msg } -> Maybe Card -> Html msg
+cell : { clicked : msg, neighbors : List Card } -> Maybe Card -> Html msg
 cell args maybeCard =
     maybeCard
         |> Maybe.map Card.emoji
@@ -46,3 +46,30 @@ cell args maybeCard =
                     |> Maybe.map Card.emoji
                     |> Maybe.withDefault " "
             }
+        |> Layout.withStack []
+            (maybeCard
+                |> Maybe.map Card.produces
+                |> Maybe.map
+                    (\( to, fun ) ->
+                        if fun args.neighbors then
+                            [ \attrs ->
+                                Card.emoji to
+                                    |> Layout.text
+                                        (Layout.centered
+                                            ++ [ Html.Attributes.style "border-radius" "100%"
+                                               , Html.Attributes.style "right" "-8px"
+                                               , Html.Attributes.style "top" "-8px"
+                                               , Html.Attributes.style "height" "24px"
+                                               , Html.Attributes.style "aspect-ratio" "1"
+                                               , Html.Attributes.style "background-color" "white"
+                                               , Html.Attributes.style "border" "1px solid rgba(0,0,0,0.2)"
+                                               ]
+                                            ++ attrs
+                                        )
+                            ]
+
+                        else
+                            []
+                    )
+                |> Maybe.withDefault []
+            )

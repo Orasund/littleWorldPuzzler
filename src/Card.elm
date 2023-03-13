@@ -107,23 +107,23 @@ produces card =
 price : Card -> Int
 price card =
     case card of
+        Water ->
+            5
+
         Tree ->
-            10
+            5
 
         Fire ->
-            10
+            5
 
         Rabbit ->
-            10
+            5
 
         Wolf ->
-            15
-
-        Water ->
-            20
+            10
 
         Snow ->
-            25
+            15
 
         Volcano ->
-            30
+            20
