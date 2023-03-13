@@ -44,7 +44,7 @@ view model =
             , View.button (Just (Restart model.seed)) "Restart"
             ]
                 |> Layout.row
-                    [ Layout.spaceBetween
+                    [ Layout.contentWithSpaceBetween
                     , Html.Attributes.style "width" "100%"
                     ]
           , List.range 0 (Config.worldSize - 1)
@@ -56,37 +56,15 @@ view model =
                                     model.game.world
                                         |> Dict.get ( x, y )
                                         |> (\maybeCard ->
-                                                maybeCard
-                                                    |> Maybe.map Card.emoji
-                                                    |> Maybe.withDefault ""
-                                                    |> Html.text
-                                                    |> Layout.buttonEl
-                                                        { onPress =
-                                                            if maybeCard == Nothing then
-                                                                ClickedAt ( x, y ) |> Just
-
-                                                            else
-                                                                Nothing
-                                                        , label =
-                                                            maybeCard
-                                                                |> Maybe.map Card.emoji
-                                                                |> Maybe.withDefault " "
-                                                        }
-                                                        (Layout.centered
-                                                            ++ [ Html.Attributes.style "width" "64px"
-                                                               , Html.Attributes.style "height" "64px"
-                                                               , Html.Attributes.style "border-radius" "16px"
-                                                               , Html.Attributes.style "font-size" "48px"
-                                                               , Html.Attributes.style
-                                                                    "border"
-                                                                    "1px solid rgba(0,0,0,0.2)"
-                                                               ]
-                                                        )
+                                                View.cell
+                                                    { clicked = ClickedAt ( x, y )
+                                                    }
+                                                    maybeCard
                                            )
                                 )
-                            |> Layout.row [ Layout.spacing 8 ]
+                            |> Layout.row [ Layout.gap 8 ]
                     )
-                |> Layout.column [ Layout.spacing 8 ]
+                |> Layout.column [ Layout.gap 8 ]
           , [ "Selected:"
                 ++ (model.game.selected
                         |> Maybe.map Card.emoji
@@ -103,7 +81,7 @@ view model =
                 |> Layout.el []
             ]
                 |> Layout.row
-                    [ Layout.spaceBetween
+                    [ Layout.contentWithSpaceBetween
                     , Html.Attributes.style "width" "100%"
                     ]
           , [ "Buy Cards" |> Html.text |> Layout.el []
@@ -115,15 +93,15 @@ view model =
                             ++ String.fromInt (Card.price card)
                             |> View.button (Just (BoughtCard card))
                     )
-                |> Layout.row [ Layout.spacing 8 ]
+                |> Layout.row [ Layout.gap 8 ]
             ]
                 |> Layout.column
-                    (Layout.spacing 8
+                    (Layout.gap 8
                         :: Layout.centered
                     )
           ]
             |> Layout.column
-                ([ Layout.spacing 32
+                ([ Layout.gap 32
                  , Html.Attributes.style "width" "400px"
                  , Html.Attributes.style "height" "600px"
                  , Html.Attributes.style "border" "1px solid rgba(0,0,0,0.2)"
