@@ -13,4 +13,9 @@ cardWidth =
 
 worldSize : Int
 worldSize =
-    4
+    3
+
+
+maxTurns : Int
+maxTurns =
+    50

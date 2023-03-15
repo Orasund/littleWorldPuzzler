@@ -9,6 +9,7 @@ import Game.Card
 import Html
 import Html.Attributes
 import Layout
+import Pack exposing (Pack)
 import Random exposing (Seed)
 import View
 
@@ -24,6 +25,7 @@ type Msg
     = ClickedAt ( Int, Int )
     | SwapCards
     | BoughtCard Card
+    | BoughtPack Pack
     | Restart Seed
     | CloseShop
 
@@ -44,8 +46,10 @@ view model =
     , body =
         [ [ [ "Points: "
                 ++ String.fromInt model.game.points
-                |> Html.text
-                |> Layout.el []
+                |> Layout.text []
+            , "Turn:"
+                ++ String.fromInt model.game.turns
+                |> Layout.text []
             , View.button (Just (Restart model.seed)) "Restart"
             ]
                 |> Layout.row
@@ -53,17 +57,29 @@ view model =
                     , Html.Attributes.style "width" "100%"
                     ]
           , (if model.viewShop then
-                [ "Buy Cards" |> Html.text |> Layout.el []
-                , Card.asList
-                    |> List.map
-                        (\card ->
-                            [ View.viewCard card
-                            , "Buy for "
-                                ++ String.fromInt (Card.price card)
-                                |> View.button (Just (BoughtCard card))
-                            ]
-                                |> Layout.column (Layout.centered ++ [ Layout.gap 8 ])
-                        )
+                [ "Buy Cards & Packs" |> Layout.text []
+                , [ Pack.asList
+                        |> List.map
+                            (\pack ->
+                                [ pack |> View.viewPack
+                                , "Buy for "
+                                    ++ String.fromInt (Pack.price pack)
+                                    |> View.button (Just (BoughtPack pack))
+                                ]
+                                    |> Layout.column (Layout.centered ++ [ Layout.gap 8 ])
+                            )
+                  , Card.asList
+                        |> List.map
+                            (\card ->
+                                [ View.viewCard [] card
+                                , "Buy for "
+                                    ++ String.fromInt (Card.price card)
+                                    |> View.button (Just (BoughtCard card))
+                                ]
+                                    |> Layout.column (Layout.centered ++ [ Layout.gap 8 ])
+                            )
+                  ]
+                    |> List.concat
                     |> Layout.row [ Layout.gap 8 ]
                 , View.button
                     (if model.game.deck /= [] then
@@ -103,7 +119,7 @@ view model =
                         ++ Layout.centered
                     )
           , [ [ model.game.backpack
-                    |> Maybe.map View.viewCard
+                    |> Maybe.map (View.viewCard [])
                     |> Maybe.withDefault
                         ("Backpack"
                             |> View.viewEmptyCard
@@ -113,7 +129,7 @@ view model =
               ]
                 |> Layout.column []
             , model.game.selected
-                |> Maybe.map View.viewCard
+                |> Maybe.map (View.viewCard [])
                 |> Maybe.withDefault Layout.none
             , model.game.deck
                 |> View.deck
@@ -124,7 +140,7 @@ view model =
                     ]
           ]
             |> Layout.column
-                ([ Layout.gap 32
+                ([ Layout.gap 16
                  , Html.Attributes.style "width" "400px"
                  , Html.Attributes.style "height" "600px"
                  , Html.Attributes.style "border" "1px solid rgba(0,0,0,0.2)"
@@ -201,6 +217,13 @@ update msg model =
         BoughtCard card ->
             ( model.game
                 |> Game.buyCard card
+                |> (\it -> { model | game = it })
+            , Cmd.none
+            )
+
+        BoughtPack pack ->
+            ( model.game
+                |> Game.buyPack pack
                 |> (\it -> { model | game = it })
             , Cmd.none
             )

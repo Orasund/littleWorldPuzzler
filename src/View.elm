@@ -7,6 +7,7 @@ import Game.Entity
 import Html exposing (Attribute, Html)
 import Html.Attributes
 import Layout
+import Pack exposing (Pack)
 
 
 button : Maybe msg -> String -> Html msg
@@ -21,9 +22,12 @@ button onPress label =
             }
 
 
-viewCard : Card -> Html msg
-viewCard card =
-    card
+viewCard : List (Attribute msg) -> Card -> Html msg
+viewCard attrs card =
+    [ card
+        |> Card.emoji
+        |> Layout.text [ Html.Attributes.style "padding" "4px" ]
+    , card
         |> Card.emoji
         |> Layout.text
             ([ Layout.fill
@@ -31,11 +35,43 @@ viewCard card =
              ]
                 ++ Layout.centered
             )
-        |> List.singleton
+    ]
         |> Game.Card.default
-            [ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
-            , Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px")
-            ]
+            (attrs
+                ++ [ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
+                   , Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px")
+                   ]
+            )
+
+
+viewPack : Pack -> Html msg
+viewPack pack =
+    Pack.cards pack
+        |> List.indexedMap
+            (\i card ->
+                (\attrs -> viewCard attrs card)
+                    |> Game.Entity.new
+                    |> Game.Entity.move ( toFloat i * 16, 0 )
+            )
+        |> Game.Entity.pileAbove
+            (Layout.el
+                [ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
+                , Html.Attributes.style "width"
+                    (String.fromFloat
+                        (Config.cardWidth
+                            + (Pack.cards pack
+                                |> List.length
+                                |> (+) -1
+                                |> (*) 16
+                                |> toFloat
+                              )
+                        )
+                        ++ "px"
+                    )
+                ]
+                Layout.none
+            )
+        |> Game.Entity.toHtml []
 
 
 viewEmptyCard : String -> Html msg

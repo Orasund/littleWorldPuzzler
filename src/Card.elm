@@ -9,6 +9,7 @@ type Card
     | Wolf
     | Volcano
     | Snow
+    | Eagle
 
 
 asList : List Card
@@ -20,6 +21,7 @@ asList =
     , Wolf
     , Volcano
     , Snow
+    , Eagle
     ]
 
 
@@ -46,6 +48,9 @@ emoji card =
 
         Snow ->
             "❄️"
+
+        Eagle ->
+            "🦅"
 
 
 transform : Card -> ( Maybe Card, List Card -> Bool )
@@ -78,6 +83,9 @@ transform card =
         Snow ->
             ( Just Water, List.member Fire )
 
+        Eagle ->
+            ( Nothing, List.member Rabbit )
+
 
 produces : Card -> ( Card, List Card -> Bool )
 produces card =
@@ -89,7 +97,13 @@ produces card =
             ( card, List.member Water )
 
         Fire ->
-            ( card, (==) (List.repeat 4 Fire) )
+            ( card
+            , \neighbors ->
+                neighbors
+                    |> List.filter ((==) Fire)
+                    |> List.length
+                    |> (\int -> int >= 2)
+            )
 
         Rabbit ->
             ( card
@@ -101,7 +115,7 @@ produces card =
             )
 
         Wolf ->
-            ( card, (==) (List.repeat 4 Rabbit) )
+            ( card, List.member Rabbit )
 
         Volcano ->
             ( Fire, always True )
@@ -109,27 +123,33 @@ produces card =
         Snow ->
             ( Snow, List.member Water )
 
+        Eagle ->
+            ( Eagle, List.member Rabbit )
+
 
 price : Card -> Int
 price card =
     case card of
         Water ->
-            5
-
-        Tree ->
-            5
-
-        Fire ->
-            5
-
-        Rabbit ->
-            5
-
-        Wolf ->
             10
 
+        Tree ->
+            10
+
+        Fire ->
+            10
+
+        Rabbit ->
+            20
+
+        Wolf ->
+            20
+
+        Eagle ->
+            20
+
         Snow ->
-            15
+            30
 
         Volcano ->
-            20
+            40

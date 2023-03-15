@@ -3,6 +3,7 @@ module Game exposing (..)
 import Card exposing (Card)
 import Config
 import Dict exposing (Dict)
+import Pack exposing (Pack)
 import Random exposing (Generator)
 
 
@@ -12,6 +13,7 @@ type alias Game =
     , backpack : Maybe Card
     , deck : List Card
     , points : Int
+    , turns : Int
     }
 
 
@@ -36,16 +38,27 @@ init =
     { world = Dict.empty
     , selected = Nothing
     , backpack = Nothing
-    , deck =
-        [ Card.Tree, Card.Water, Card.Volcano ]
+    , deck = Pack.cards Pack.ForestFire
     , points = 0
+    , turns = 0
+    }
+
+
+clearRound : Game -> Game
+clearRound game =
+    { game
+        | world = Dict.empty
+        , selected = Nothing
+        , backpack = Nothing
+        , deck = []
+        , turns = 0
     }
 
 
 runEnded : Game -> Bool
 runEnded game =
     (game.deck == [] && game.selected == Nothing && game.backpack == Nothing)
-        || (List.length game.deck > 10)
+        || (game.turns > Config.maxTurns)
         || (List.range 0 (Config.worldSize - 1)
                 |> List.concatMap
                     (\x ->
@@ -111,6 +124,18 @@ buyCard card game =
         game
 
 
+buyPack : Pack -> Game -> Game
+buyPack pack game =
+    if game.points >= Pack.price pack then
+        { game
+            | deck = game.deck ++ Pack.cards pack
+            , points = game.points - Pack.price pack
+        }
+
+    else
+        game
+
+
 neighborsOf : ( Int, Int ) -> List ( Int, Int )
 neighborsOf ( x, y ) =
     [ ( x + 1, y ), ( x, y + 1 ), ( x, y - 1 ), ( x - 1, y ) ]
@@ -153,16 +178,6 @@ tick world =
             ( world, [] )
 
 
-clearRound : Game -> Game
-clearRound game =
-    { game
-        | world = Dict.empty
-        , selected = Nothing
-        , backpack = Nothing
-        , deck = []
-    }
-
-
 placeCard : ( Int, Int ) -> Game -> Generator ( Game, List Effect )
 placeCard pos game =
     case game.selected of
@@ -176,6 +191,7 @@ placeCard pos game =
                             , deck = game.deck ++ newCards
                             , selected = Nothing
                             , points = game.points + List.length newCards
+                            , turns = game.turns + 1
                         }
                             |> (\g ->
                                     if g |> runEnded then
