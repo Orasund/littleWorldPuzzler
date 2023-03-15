@@ -67,7 +67,13 @@ transform card =
             ( Nothing, always True )
 
         Volcano ->
-            ( Nothing, List.member Fire )
+            ( Just Fire
+            , \neighbors ->
+                neighbors
+                    |> List.filter ((==) Fire)
+                    |> List.length
+                    |> (\int -> int >= 2)
+            )
 
         Snow ->
             ( Just Water, List.member Fire )

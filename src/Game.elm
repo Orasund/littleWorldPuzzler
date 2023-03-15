@@ -9,6 +9,7 @@ import Random exposing (Generator)
 type alias Game =
     { world : Dict ( Int, Int ) Card
     , selected : Maybe Card
+    , backpack : Maybe Card
     , deck : List Card
     , points : Int
     }
@@ -34,15 +35,17 @@ init : Game
 init =
     { world = Dict.empty
     , selected = Nothing
+    , backpack = Nothing
     , deck =
-        [ Card.Tree, Card.Tree, Card.Water, Card.Water, Card.Fire ]
+        [ Card.Tree, Card.Water, Card.Volcano ]
     , points = 0
     }
 
 
 runEnded : Game -> Bool
 runEnded game =
-    (game.deck == [])
+    (game.deck == [] && game.selected == Nothing && game.backpack == Nothing)
+        || (List.length game.deck > 10)
         || (List.range 0 (Config.worldSize - 1)
                 |> List.concatMap
                     (\x ->
@@ -61,17 +64,39 @@ drawCard game =
             (\list ->
                 case list of
                     head :: tail ->
-                        { game
-                            | selected = Just head
-                            , deck = tail
-                        }
+                        if game.selected == Nothing then
+                            { game
+                                | selected = Just head
+                                , deck = tail
+                            }
+
+                        else if game.backpack == Nothing then
+                            { game | backpack = Just head, deck = tail }
+
+                        else
+                            game
 
                     [] ->
-                        { game
-                            | selected = Nothing
-                            , deck = []
-                        }
+                        if game.backpack /= Nothing then
+                            { game | backpack = Nothing, selected = game.backpack }
+
+                        else
+                            game
             )
+
+
+swapCards : Game -> Generator Game
+swapCards game =
+    { game
+        | selected = game.backpack
+        , backpack = game.selected
+    }
+        |> (if game.backpack == Nothing then
+                drawCard
+
+            else
+                Random.constant
+           )
 
 
 buyCard : Card -> Game -> Game
@@ -128,6 +153,16 @@ tick world =
             ( world, [] )
 
 
+clearRound : Game -> Game
+clearRound game =
+    { game
+        | world = Dict.empty
+        , selected = Nothing
+        , backpack = Nothing
+        , deck = []
+    }
+
+
 placeCard : ( Int, Int ) -> Game -> Generator ( Game, List Effect )
 placeCard pos game =
     case game.selected of
@@ -139,16 +174,15 @@ placeCard pos game =
                         { game
                             | world = world
                             , deck = game.deck ++ newCards
+                            , selected = Nothing
                             , points = game.points + List.length newCards
                         }
                             |> (\g ->
                                     if g |> runEnded then
                                         ( { g
-                                            | world = Dict.empty
-                                            , selected = Nothing
-                                            , deck = []
-                                            , points = g.points + Config.worldSize * Config.worldSize
+                                            | points = g.points + Config.worldSize * Config.worldSize
                                           }
+                                            |> clearRound
                                         , [ OpenShop ]
                                         )
                                             |> Random.constant

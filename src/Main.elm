@@ -5,6 +5,7 @@ import Card exposing (Card)
 import Config
 import Dict
 import Game exposing (Effect(..), Game)
+import Game.Card
 import Html
 import Html.Attributes
 import Layout
@@ -21,6 +22,7 @@ type alias Model =
 
 type Msg
     = ClickedAt ( Int, Int )
+    | SwapCards
     | BoughtCard Card
     | Restart Seed
     | CloseShop
@@ -55,13 +57,22 @@ view model =
                 , Card.asList
                     |> List.map
                         (\card ->
-                            Card.emoji card
-                                ++ " for "
+                            [ View.viewCard card
+                            , "Buy for "
                                 ++ String.fromInt (Card.price card)
                                 |> View.button (Just (BoughtCard card))
+                            ]
+                                |> Layout.column (Layout.centered ++ [ Layout.gap 8 ])
                         )
                     |> Layout.row [ Layout.gap 8 ]
-                , View.button (Just CloseShop) "Close"
+                , View.button
+                    (if model.game.deck /= [] then
+                        Just CloseShop
+
+                     else
+                        Nothing
+                    )
+                    "Close"
                 ]
 
              else
@@ -91,20 +102,21 @@ view model =
                     ([ Layout.fill, Layout.gap 8 ]
                         ++ Layout.centered
                     )
-          , [ "Selected:"
-                ++ (model.game.selected
-                        |> Maybe.map Card.emoji
-                        |> Maybe.withDefault ""
-                   )
-                |> Html.text
-                |> Layout.el []
-            , "Deck: "
-                ++ (model.game.deck
-                        |> List.map Card.emoji
-                        |> String.concat
-                   )
-                |> Html.text
-                |> Layout.el []
+          , [ [ model.game.backpack
+                    |> Maybe.map View.viewCard
+                    |> Maybe.withDefault
+                        ("Backpack"
+                            |> View.viewEmptyCard
+                        )
+                    |> Layout.el (Layout.asButton { onPress = Just SwapCards, label = "swap cards" })
+              , "Click to swap" |> Layout.text []
+              ]
+                |> Layout.column []
+            , model.game.selected
+                |> Maybe.map View.viewCard
+                |> Maybe.withDefault Layout.none
+            , model.game.deck
+                |> View.deck
             ]
                 |> Layout.row
                     [ Layout.contentWithSpaceBetween
@@ -141,6 +153,14 @@ button:focus {
 button:active {
     filter: brightness(0.7)
 }
+
+.cardback {
+    background-color: #e5e5f7;
+background-image:  linear-gradient(135deg, #444cf7 25%, transparent 25%), linear-gradient(225deg, #444cf7 25%, transparent 25%), linear-gradient(45deg, #444cf7 25%, transparent 25%), linear-gradient(315deg, #444cf7 25%, #e5e5f7 25%);
+background-position:  10px 0, 10px 0, 0 0, 0 0;
+background-size: 20px 20px;
+background-repeat: repeat;
+}
 """ ]
         ]
     }
@@ -169,6 +189,14 @@ update msg model =
                    )
             , Cmd.none
             )
+
+        SwapCards ->
+            Random.step (Game.swapCards model.game) model.seed
+                |> (\( game, seed ) ->
+                        ( { model | game = game, seed = seed }
+                        , Cmd.none
+                        )
+                   )
 
         BoughtCard card ->
             ( model.game

@@ -1,7 +1,10 @@
 module View exposing (..)
 
 import Card exposing (Card)
-import Html exposing (Html)
+import Config
+import Game.Card
+import Game.Entity
+import Html exposing (Attribute, Html)
 import Html.Attributes
 import Layout
 
@@ -16,6 +19,42 @@ button onPress label =
             { label = label
             , onPress = onPress
             }
+
+
+viewCard : Card -> Html msg
+viewCard card =
+    card
+        |> Card.emoji
+        |> Layout.text
+            ([ Layout.fill
+             , Html.Attributes.style "font-size" "50px"
+             ]
+                ++ Layout.centered
+            )
+        |> List.singleton
+        |> Game.Card.default
+            [ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
+            , Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px")
+            ]
+
+
+viewEmptyCard : String -> Html msg
+viewEmptyCard =
+    Game.Card.empty
+        [ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
+        , Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px")
+        ]
+
+
+viewCardBack : List (Attribute msg) -> Html msg
+viewCardBack attrs =
+    Layout.none
+        |> Game.Card.back
+            ([ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
+             , Html.Attributes.class "cardback"
+             ]
+                ++ attrs
+            )
 
 
 cell : { clicked : msg, neighbors : List Card } -> Maybe Card -> Html msg
@@ -73,3 +112,31 @@ cell args maybeCard =
                     )
                 |> Maybe.withDefault []
             )
+
+
+deck : List Card -> Html msg
+deck cards =
+    viewCardBack
+        |> Game.Entity.new
+        |> List.repeat (List.length cards)
+        |> List.indexedMap
+            (\i ->
+                Game.Entity.move ( 0, -3 * toFloat i )
+            )
+        |> Game.Entity.pileAbove
+            ("Deck"
+                |> viewEmptyCard
+                |> Layout.withStack []
+                    [ \attrs ->
+                        cards
+                            |> List.map Card.emoji
+                            |> String.concat
+                            |> Layout.text
+                                (attrs
+                                    ++ [ Html.Attributes.style "right" (String.fromFloat Config.cardWidth ++ "px")
+                                       , Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px")
+                                       ]
+                                )
+                    ]
+            )
+        |> Game.Entity.toHtml []
