@@ -38,7 +38,7 @@ init =
     { world = Dict.empty
     , selected = Nothing
     , backpack = Nothing
-    , deck = Pack.cards Pack.ForestFire
+    , deck = []
     , points = 0
     , turns = 0
     }

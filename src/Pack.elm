@@ -7,11 +7,12 @@ type Pack
     = ForestFire
     | RabbitRampage
     | FireAndIce
+    | FoodChain
 
 
 asList : List Pack
 asList =
-    [ ForestFire, RabbitRampage, FireAndIce ]
+    [ ForestFire, RabbitRampage, FireAndIce, FoodChain ]
 
 
 cards : Pack -> List Card
@@ -21,10 +22,13 @@ cards pack =
             [ Card.Tree, Card.Tree, Card.Water, Card.Fire ]
 
         RabbitRampage ->
-            [ Card.Tree, Card.Tree, Card.Rabbit, Card.Wolf ]
+            [ Card.Water, Card.Tree, Card.Rabbit, Card.Eagle, Card.Eagle ]
 
         FireAndIce ->
             [ Card.Volcano, Card.Volcano, Card.Water, Card.Snow ]
+
+        FoodChain ->
+            [ Card.Rabbit, Card.Tree, Card.Water, Card.Nest ]
 
 
 price : Pack -> Int

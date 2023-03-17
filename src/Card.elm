@@ -10,6 +10,7 @@ type Card
     | Volcano
     | Snow
     | Eagle
+    | Nest
 
 
 asList : List Card
@@ -22,6 +23,7 @@ asList =
     , Volcano
     , Snow
     , Eagle
+    , Nest
     ]
 
 
@@ -52,6 +54,9 @@ emoji card =
         Eagle ->
             "🦅"
 
+        Nest ->
+            "\u{1FABA}"
+
 
 transform : Card -> ( Maybe Card, List Card -> Bool )
 transform card =
@@ -60,13 +65,21 @@ transform card =
             ( Nothing, always True )
 
         Tree ->
-            ( Just Fire, List.member Fire )
+            ( Nothing
+            , \line ->
+                List.member Fire line
+                    || List.member Rabbit line
+            )
 
         Fire ->
             ( Nothing, List.member Water )
 
         Rabbit ->
-            ( Just Wolf, List.member Wolf )
+            ( Nothing
+            , \line ->
+                List.member Wolf line
+                    || List.member Eagle line
+            )
 
         Wolf ->
             ( Nothing, always True )
@@ -86,6 +99,15 @@ transform card =
         Eagle ->
             ( Nothing, List.member Rabbit )
 
+        Nest ->
+            ( Nothing
+            , \neighbors ->
+                neighbors
+                    |> List.filter ((==) Fire)
+                    |> List.length
+                    |> (\int -> int >= 2)
+            )
+
 
 produces : Card -> ( Card, List Card -> Bool )
 produces card =
@@ -99,19 +121,17 @@ produces card =
         Fire ->
             ( card
             , \neighbors ->
-                neighbors
+                (neighbors
                     |> List.filter ((==) Fire)
                     |> List.length
                     |> (\int -> int >= 2)
+                )
+                    || List.member Tree neighbors
             )
 
         Rabbit ->
             ( card
-            , \neighbors ->
-                neighbors
-                    |> List.filter ((==) Tree)
-                    |> List.length
-                    |> (\int -> int >= 2)
+            , List.member Tree
             )
 
         Wolf ->
@@ -124,32 +144,38 @@ produces card =
             ( Snow, List.member Water )
 
         Eagle ->
-            ( Eagle, List.member Rabbit )
+            ( card, List.member Rabbit )
+
+        Nest ->
+            ( Eagle, always True )
 
 
 price : Card -> Int
 price card =
     case card of
         Water ->
-            10
+            0
 
         Tree ->
-            10
+            0
 
         Fire ->
-            10
+            0
 
         Rabbit ->
-            20
+            10
 
         Wolf ->
-            20
+            10
 
         Eagle ->
-            20
+            10
 
         Snow ->
-            30
+            20
 
         Volcano ->
-            40
+            30
+
+        Nest ->
+            30

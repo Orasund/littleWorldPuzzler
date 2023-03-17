@@ -24,17 +24,15 @@ type alias Model =
 type Msg
     = ClickedAt ( Int, Int )
     | SwapCards
-    | BoughtCard Card
     | BoughtPack Pack
     | Restart Seed
-    | CloseShop
 
 
 init : () -> ( Model, Cmd Msg )
 init () =
     ( { game = Game.init
       , seed = Random.initialSeed 42
-      , viewShop = False
+      , viewShop = True
       }
     , Random.generate Restart Random.independentSeed
     )
@@ -57,38 +55,18 @@ view model =
                     , Html.Attributes.style "width" "100%"
                     ]
           , (if model.viewShop then
-                [ "Buy Cards & Packs" |> Layout.text []
-                , [ Pack.asList
-                        |> List.map
-                            (\pack ->
-                                [ pack |> View.viewPack
-                                , "Buy for "
-                                    ++ String.fromInt (Pack.price pack)
-                                    |> View.button (Just (BoughtPack pack))
-                                ]
-                                    |> Layout.column (Layout.centered ++ [ Layout.gap 8 ])
-                            )
-                  , Card.asList
-                        |> List.map
-                            (\card ->
-                                [ View.viewCard [] card
-                                , "Buy for "
-                                    ++ String.fromInt (Card.price card)
-                                    |> View.button (Just (BoughtCard card))
-                                ]
-                                    |> Layout.column (Layout.centered ++ [ Layout.gap 8 ])
-                            )
-                  ]
-                    |> List.concat
+                [ "Choose a Pack" |> Layout.text []
+                , Pack.asList
+                    |> List.map
+                        (\pack ->
+                            [ pack |> View.viewPack
+                            , "Play for "
+                                ++ String.fromInt (Pack.price pack)
+                                |> View.button (Just (BoughtPack pack))
+                            ]
+                                |> Layout.column (Layout.centered ++ [ Layout.gap 8 ])
+                        )
                     |> Layout.row [ Layout.gap 8 ]
-                , View.button
-                    (if model.game.deck /= [] then
-                        Just CloseShop
-
-                     else
-                        Nothing
-                    )
-                    "Close"
                 ]
 
              else
@@ -214,19 +192,20 @@ update msg model =
                         )
                    )
 
-        BoughtCard card ->
-            ( model.game
-                |> Game.buyCard card
-                |> (\it -> { model | game = it })
-            , Cmd.none
-            )
-
         BoughtPack pack ->
-            ( model.game
+            model.game
                 |> Game.buyPack pack
-                |> (\it -> { model | game = it })
-            , Cmd.none
-            )
+                |> Game.drawCard
+                |> (\gen -> Random.step gen model.seed)
+                |> (\( game, seed ) ->
+                        ( { model
+                            | game = game
+                            , seed = seed
+                            , viewShop = False
+                          }
+                        , Cmd.none
+                        )
+                   )
 
         Restart initialSeed ->
             Random.step (Game.drawCard Game.init) initialSeed
@@ -234,18 +213,6 @@ update msg model =
                         ( { model
                             | game = game
                             , seed = seed
-                          }
-                        , Cmd.none
-                        )
-                   )
-
-        CloseShop ->
-            Random.step (Game.drawCard model.game) model.seed
-                |> (\( game, seed ) ->
-                        ( { model
-                            | game = game
-                            , seed = seed
-                            , viewShop = False
                           }
                         , Cmd.none
                         )
