@@ -155,8 +155,8 @@ tick world =
                                 |> Dict.update pos
                                     (\_ ->
                                         Card.transform card
-                                            |> (\( maybeCard, fun ) ->
-                                                    if fun neighbors then
+                                            |> (\( maybeCard, exp ) ->
+                                                    if Card.isValidNeighborhoods neighbors exp then
                                                         maybeCard
 
                                                     else
@@ -165,8 +165,8 @@ tick world =
                                     )
                             , newCards
                                 ++ (Card.produces card
-                                        |> (\( newCard, fun ) ->
-                                                if fun neighbors then
+                                        |> (\( newCard, exp ) ->
+                                                if Card.isValidNeighborhoods neighbors exp then
                                                     [ newCard ]
 
                                                 else

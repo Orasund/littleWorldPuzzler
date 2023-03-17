@@ -6,6 +6,7 @@ import Config
 import Dict
 import Game exposing (Effect(..), Game)
 import Game.Card
+import Game.Entity
 import Html
 import Html.Attributes
 import Layout
@@ -96,18 +97,34 @@ view model =
                     ([ Layout.fill, Layout.gap 8 ]
                         ++ Layout.centered
                     )
-          , [ [ model.game.backpack
+          , [ [ "Click to swap" |> Layout.text []
+              , model.game.backpack
                     |> Maybe.map (View.viewCard [])
                     |> Maybe.withDefault
                         ("Backpack"
                             |> View.viewEmptyCard
                         )
                     |> Layout.el (Layout.asButton { onPress = Just SwapCards, label = "swap cards" })
-              , "Click to swap" |> Layout.text []
               ]
-                |> Layout.column []
+                |> Layout.column [ Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px") ]
             , model.game.selected
-                |> Maybe.map (View.viewCard [])
+                |> Maybe.map
+                    (\card ->
+                        [ View.description
+                            [ Html.Attributes.style "bottom" "-100px"
+                            , Html.Attributes.style "left" (String.fromFloat (Config.cardWidth * 1.5 + 5) ++ "px")
+                            , Html.Attributes.style "width" "200px"
+                            , Html.Attributes.style "border" "1px dashed rgba(0,0,0,0.2)"
+                            , Html.Attributes.style "padding" "8px"
+                            ]
+                            card
+                        , View.viewCard [] card
+                        ]
+                            |> Layout.column
+                                [ Layout.alignAtCenter
+                                , Layout.gap 8
+                                ]
+                    )
                 |> Maybe.withDefault Layout.none
             , model.game.deck
                 |> View.deck
@@ -115,6 +132,7 @@ view model =
                 |> Layout.row
                     [ Layout.contentWithSpaceBetween
                     , Html.Attributes.style "width" "100%"
+                    , Layout.alignAtEnd
                     ]
           ]
             |> Layout.column

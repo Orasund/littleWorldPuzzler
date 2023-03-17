@@ -15,6 +15,15 @@ type Card
     | Caterpillar
 
 
+type NeighborExpression
+    = Either (List NeighborExpression)
+    | NextTo Card
+    | NextToAtLeast Int Card
+    | Not NeighborExpression
+    | Anything
+    | Something
+
+
 asList : List Card
 asList =
     [ Water
@@ -29,6 +38,31 @@ asList =
     , Butterfly
     , Caterpillar
     ]
+
+
+isValidNeighborhoods : List Card -> NeighborExpression -> Bool
+isValidNeighborhoods neighborhood exp =
+    case exp of
+        Either exps ->
+            exps |> List.any (isValidNeighborhoods neighborhood)
+
+        NextTo card ->
+            neighborhood |> List.member card
+
+        NextToAtLeast amount card ->
+            neighborhood
+                |> List.filter ((==) card)
+                |> List.length
+                |> (\int -> int >= amount)
+
+        Not e ->
+            not (isValidNeighborhoods neighborhood e)
+
+        Anything ->
+            True
+
+        Something ->
+            neighborhood /= []
 
 
 emoji : Card -> String
@@ -68,117 +102,101 @@ emoji card =
             "🐛"
 
 
-transform : Card -> ( Maybe Card, List Card -> Bool )
+transform : Card -> ( Maybe Card, NeighborExpression )
 transform card =
     case card of
         Water ->
-            ( Nothing, always True )
+            ( Nothing, Anything )
 
         Tree ->
             ( Nothing
-            , \line ->
-                List.member Fire line
-                    || List.member Rabbit line
-                    || List.member Caterpillar line
+            , Either
+                [ NextTo Fire
+                , NextTo Rabbit
+                , NextTo Caterpillar
+                ]
             )
 
         Fire ->
-            ( Nothing, List.member Water )
+            ( Nothing, NextTo Water )
 
         Rabbit ->
             ( Nothing
-            , \line ->
-                List.member Wolf line
-                    || List.member Eagle line
+            , Either [ NextTo Wolf, NextTo Eagle ]
             )
 
         Wolf ->
-            ( Nothing, always True )
+            ( Nothing, Anything )
 
         Volcano ->
             ( Just Fire
-            , \neighbors ->
-                neighbors
-                    |> List.filter ((==) Fire)
-                    |> List.length
-                    |> (\int -> int >= 2)
+            , NextToAtLeast 2 Fire
             )
 
         Snow ->
-            ( Just Water, List.member Fire )
+            ( Just Water, NextTo Fire )
 
         Eagle ->
-            ( Nothing, List.member Rabbit )
+            ( Nothing, NextTo Rabbit )
 
         Nest ->
             ( Nothing
-            , \neighbors ->
-                neighbors
-                    |> List.filter ((==) Fire)
-                    |> List.length
-                    |> (\int -> int >= 2)
+            , NextToAtLeast 2 Fire
             )
 
         Butterfly ->
             ( Just Caterpillar
-            , \neighbors ->
-                List.member Tree neighbors
+            , NextTo Tree
             )
 
         Caterpillar ->
             ( Nothing
-            , \neighbors ->
-                neighbors
-                    |> List.member Tree
-                    |> not
+            , Not (NextTo Tree)
             )
 
 
-produces : Card -> ( Card, List Card -> Bool )
+produces : Card -> ( Card, NeighborExpression )
 produces card =
     case card of
         Water ->
-            ( card, (/=) [] )
+            ( card, Something )
 
         Tree ->
-            ( card, List.member Water )
+            ( card, NextTo Water )
 
         Fire ->
             ( card
-            , \neighbors ->
-                (neighbors
-                    |> List.filter ((==) Fire)
-                    |> List.length
-                    |> (\int -> int >= 2)
-                )
-                    || List.member Tree neighbors
+            , Either
+                [ NextToAtLeast 2 Fire
+                , NextTo Tree
+                ]
             )
 
         Rabbit ->
             ( card
-            , List.member Tree
+            , NextTo Tree
             )
 
         Wolf ->
-            ( card, List.member Rabbit )
+            ( card, NextTo Rabbit )
 
         Volcano ->
-            ( Fire, always True )
+            ( Fire, Anything )
 
         Snow ->
-            ( Snow, List.member Water )
+            ( Snow, NextTo Water )
 
         Eagle ->
-            ( card, List.member Rabbit )
+            ( card, NextTo Rabbit )
 
         Nest ->
-            ( Eagle, always True )
+            ( Eagle, Anything )
 
         Butterfly ->
-            ( Tree, List.member Tree )
+            ( Tree, NextTo Tree )
 
         Caterpillar ->
-            ( Butterfly, List.member Tree )
+            ( Butterfly, NextTo Tree )
 
 
 price : Card -> Int

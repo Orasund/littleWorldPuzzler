@@ -1,6 +1,6 @@
 module View exposing (..)
 
-import Card exposing (Card)
+import Card exposing (Card, NeighborExpression)
 import Config
 import Game.Card
 import Game.Entity
@@ -93,6 +93,71 @@ viewCardBack attrs =
             )
 
 
+neighborExp : NeighborExpression -> String
+neighborExp exp =
+    case exp of
+        Card.Either exps ->
+            "either "
+                ++ (exps
+                        |> List.map neighborExp
+                        |> String.join " or"
+                   )
+
+        Card.NextTo card ->
+            Card.emoji card
+
+        Card.NextToAtLeast amount card ->
+            Card.emoji card
+                |> List.repeat amount
+                |> String.concat
+
+        Card.Not e ->
+            "not " ++ neighborExp e
+
+        Card.Anything ->
+            "any cell"
+
+        Card.Something ->
+            "some non empty cell"
+
+
+description : List (Attribute msg) -> Card -> Html msg
+description attrs card =
+    [ "Rules for "
+        ++ Card.emoji card
+        |> Layout.text
+            [ Html.Attributes.style "font-weight" "bold"
+            , Html.Attributes.style "font-size" "20px"
+            ]
+    , Card.produces card
+        |> (\( newCard, exp ) ->
+                "Produces "
+                    ++ Card.emoji newCard
+                    ++ " if next to "
+                    ++ neighborExp exp
+                    ++ "."
+           )
+        |> Layout.text []
+    , Card.transform card
+        |> (\( maybeCard, exp ) ->
+                maybeCard
+                    |> Maybe.map
+                        (\newCard ->
+                            "Turns into " ++ Card.emoji newCard
+                        )
+                    |> Maybe.withDefault "Disappears"
+                    |> (\string ->
+                            string
+                                ++ " if next to "
+                                ++ neighborExp exp
+                                ++ "."
+                       )
+           )
+        |> Layout.text []
+    ]
+        |> Layout.column (Layout.gap 8 :: attrs)
+
+
 cell : { clicked : msg, neighbors : List Card } -> Maybe Card -> Html msg
 cell args maybeCard =
     maybeCard
@@ -125,8 +190,8 @@ cell args maybeCard =
             (maybeCard
                 |> Maybe.map Card.produces
                 |> Maybe.map
-                    (\( to, fun ) ->
-                        if fun args.neighbors then
+                    (\( to, exp ) ->
+                        if Card.isValidNeighborhoods args.neighbors exp then
                             [ \attrs ->
                                 Card.emoji to
                                     |> Layout.text
