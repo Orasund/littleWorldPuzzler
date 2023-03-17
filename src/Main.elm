@@ -195,9 +195,10 @@ update msg model =
         BoughtPack pack ->
             model.game
                 |> Game.buyPack pack
-                |> Game.drawCard
-                |> (\gen -> Random.step gen model.seed)
-                |> (\( game, seed ) ->
+                |> Maybe.map Game.drawCard
+                |> Maybe.map (\gen -> Random.step gen model.seed)
+                |> Maybe.map
+                    (\( game, seed ) ->
                         ( { model
                             | game = game
                             , seed = seed
@@ -205,7 +206,8 @@ update msg model =
                           }
                         , Cmd.none
                         )
-                   )
+                    )
+                |> Maybe.withDefault ( model, Cmd.none )
 
         Restart initialSeed ->
             Random.step (Game.drawCard Game.init) initialSeed
@@ -213,6 +215,7 @@ update msg model =
                         ( { model
                             | game = game
                             , seed = seed
+                            , viewShop = True
                           }
                         , Cmd.none
                         )

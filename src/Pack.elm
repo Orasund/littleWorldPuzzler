@@ -8,11 +8,17 @@ type Pack
     | RabbitRampage
     | FireAndIce
     | FoodChain
+    | CreepyCrawlies
 
 
 asList : List Pack
 asList =
-    [ ForestFire, RabbitRampage, FireAndIce, FoodChain ]
+    [ ForestFire
+    , RabbitRampage
+    , FireAndIce
+    , FoodChain
+    , CreepyCrawlies
+    ]
 
 
 cards : Pack -> List Card
@@ -29,6 +35,9 @@ cards pack =
 
         FoodChain ->
             [ Card.Rabbit, Card.Tree, Card.Water, Card.Nest ]
+
+        CreepyCrawlies ->
+            [ Card.Butterfly, Card.Caterpillar, Card.Tree, Card.Tree ]
 
 
 price : Pack -> Int

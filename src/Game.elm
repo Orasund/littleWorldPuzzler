@@ -124,16 +124,17 @@ buyCard card game =
         game
 
 
-buyPack : Pack -> Game -> Game
+buyPack : Pack -> Game -> Maybe Game
 buyPack pack game =
     if game.points >= Pack.price pack then
-        { game
-            | deck = game.deck ++ Pack.cards pack
-            , points = game.points - Pack.price pack
-        }
+        Just
+            { game
+                | deck = game.deck ++ Pack.cards pack
+                , points = game.points - Pack.price pack
+            }
 
     else
-        game
+        Nothing
 
 
 neighborsOf : ( Int, Int ) -> List ( Int, Int )

@@ -11,6 +11,8 @@ type Card
     | Snow
     | Eagle
     | Nest
+    | Butterfly
+    | Caterpillar
 
 
 asList : List Card
@@ -24,6 +26,8 @@ asList =
     , Snow
     , Eagle
     , Nest
+    , Butterfly
+    , Caterpillar
     ]
 
 
@@ -57,6 +61,12 @@ emoji card =
         Nest ->
             "\u{1FABA}"
 
+        Butterfly ->
+            "🦋"
+
+        Caterpillar ->
+            "🐛"
+
 
 transform : Card -> ( Maybe Card, List Card -> Bool )
 transform card =
@@ -69,6 +79,7 @@ transform card =
             , \line ->
                 List.member Fire line
                     || List.member Rabbit line
+                    || List.member Caterpillar line
             )
 
         Fire ->
@@ -106,6 +117,20 @@ transform card =
                     |> List.filter ((==) Fire)
                     |> List.length
                     |> (\int -> int >= 2)
+            )
+
+        Butterfly ->
+            ( Just Caterpillar
+            , \neighbors ->
+                List.member Tree neighbors
+            )
+
+        Caterpillar ->
+            ( Nothing
+            , \neighbors ->
+                neighbors
+                    |> List.member Tree
+                    |> not
             )
 
 
@@ -149,6 +174,12 @@ produces card =
         Nest ->
             ( Eagle, always True )
 
+        Butterfly ->
+            ( Tree, List.member Tree )
+
+        Caterpillar ->
+            ( Butterfly, List.member Tree )
+
 
 price : Card -> Int
 price card =
@@ -179,3 +210,9 @@ price card =
 
         Nest ->
             30
+
+        Butterfly ->
+            20
+
+        Caterpillar ->
+            10
