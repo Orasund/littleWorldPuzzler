@@ -12,6 +12,7 @@ type alias Game =
     , selected : Maybe Card
     , backpack : Maybe Card
     , deck : List Card
+    , pack : Pack
     , points : Int
     , turns : Int
     }
@@ -39,6 +40,7 @@ init =
     , selected = Nothing
     , backpack = Nothing
     , deck = []
+    , pack = Pack.IntroTree
     , points = 0
     , turns = 0
     }
@@ -131,6 +133,7 @@ buyPack pack game =
             { game
                 | deck = game.deck ++ Pack.cards pack
                 , turns = Pack.surviveTurns pack
+                , pack = pack
                 , points = game.points - Pack.price pack
             }
 

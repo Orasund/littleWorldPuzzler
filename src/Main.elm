@@ -124,7 +124,7 @@ view model =
                     )
                 |> Maybe.withDefault Layout.none
             , model.game.deck
-                |> View.deck
+                |> View.deck model.game.pack
             ]
                 |> Layout.row
                     [ Layout.contentWithSpaceBetween

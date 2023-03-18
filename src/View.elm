@@ -82,14 +82,23 @@ viewEmptyCard =
         ]
 
 
-viewCardBack : List (Attribute msg) -> Html msg
-viewCardBack attrs =
+viewCardBack : Pack -> List (Attribute msg) -> Html msg
+viewCardBack pack attrs =
+    let
+        ( backgroundImage, color ) =
+            case pack of
+                Pack.IntroFire ->
+                    ( "assets/fireBack.svg", "#F7B1AB" )
+
+                _ ->
+                    ( "assets/seedBack.svg", "#DCEDB9" )
+    in
     Layout.none
         |> Game.Card.back
-            (Game.Card.backgroundImage "assets/seedBack.svg"
+            (Game.Card.backgroundImage backgroundImage
                 ++ [ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
                    , Html.Attributes.style "background-size" "50%"
-                   , Html.Attributes.style "background-color" "#DCEDB9"
+                   , Html.Attributes.style "background-color" color
                    ]
                 ++ attrs
             )
@@ -257,9 +266,9 @@ cell args maybeCard =
             )
 
 
-deck : List Card -> Html msg
-deck cards =
-    viewCardBack
+deck : Pack -> List Card -> Html msg
+deck pack cards =
+    viewCardBack pack
         |> Game.Entity.new
         |> List.repeat (List.length cards)
         |> List.indexedMap
