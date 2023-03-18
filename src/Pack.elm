@@ -4,40 +4,56 @@ import Card exposing (Card)
 
 
 type Pack
-    = ForestFire
+    = IntroFire
+    | IntroTree
     | RabbitRampage
-    | FireAndIce
+    | IntroVolcano
     | FoodChain
-    | CreepyCrawlies
+    | IntroButterfly
+    | IntroBird
+    | IntroIce
 
 
 asList : List Pack
 asList =
-    [ ForestFire
+    [ IntroFire
+    , IntroTree
     , RabbitRampage
-    , FireAndIce
+    , IntroVolcano
     , FoodChain
-    , CreepyCrawlies
+    , IntroButterfly
+    , IntroBird
+    , IntroIce
     ]
+        |> List.sortBy price
 
 
 cards : Pack -> List Card
 cards pack =
     case pack of
-        ForestFire ->
-            [ Card.Tree, Card.Tree, Card.Water, Card.Fire ]
+        IntroFire ->
+            [ Card.Fire, Card.Fire, Card.Fire, Card.Fire, Card.Water ]
+
+        IntroTree ->
+            [ Card.Tree, Card.Tree, Card.Water, Card.Water, Card.Fire ]
+
+        IntroButterfly ->
+            [ Card.Tree, Card.Tree, Card.Butterfly, Card.Butterfly ]
 
         RabbitRampage ->
-            [ Card.Water, Card.Tree, Card.Rabbit, Card.Eagle, Card.Eagle ]
+            [ Card.Butterfly, Card.Butterfly, Card.Tree, Card.Rabbit, Card.Eagle ]
 
-        FireAndIce ->
-            [ Card.Volcano, Card.Volcano, Card.Water, Card.Snow ]
+        IntroVolcano ->
+            [ Card.Water, Card.Water, Card.Volcano, Card.Volcano ]
 
         FoodChain ->
-            [ Card.Rabbit, Card.Tree, Card.Water, Card.Nest ]
+            [ Card.Rabbit, Card.Rabbit, Card.Tree, Card.Tree, Card.Water, Card.Nest ]
 
-        CreepyCrawlies ->
-            [ Card.Butterfly, Card.Caterpillar, Card.Tree, Card.Tree ]
+        IntroBird ->
+            [ Card.Tree, Card.Tree, Card.Butterfly, Card.Butterfly, Card.Bird, Card.Bird, Card.Bird, Card.Bird, Card.Bird ]
+
+        IntroIce ->
+            [  Card.Snow,Card.Snow,Card.Snow,Card.Water,Card.Volcano]
 
 
 price : Pack -> Int
@@ -46,4 +62,13 @@ price pack =
         |> cards
         |> List.map Card.price
         |> List.sum
-        |> (\int -> int * 3 // 4)
+
+
+surviveTurns : Pack -> Int
+surviveTurns pack =
+    case pack of
+        IntroFire ->
+            20
+
+        _ ->
+            30

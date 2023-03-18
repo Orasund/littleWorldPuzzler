@@ -6,13 +6,13 @@ type Card
     | Water
     | Tree
     | Rabbit
-    | Wolf
     | Volcano
     | Snow
     | Eagle
     | Nest
     | Butterfly
     | Caterpillar
+    | Bird
 
 
 type NeighborExpression
@@ -22,22 +22,6 @@ type NeighborExpression
     | Not NeighborExpression
     | Anything
     | Something
-
-
-asList : List Card
-asList =
-    [ Water
-    , Fire
-    , Tree
-    , Rabbit
-    , Wolf
-    , Volcano
-    , Snow
-    , Eagle
-    , Nest
-    , Butterfly
-    , Caterpillar
-    ]
 
 
 isValidNeighborhoods : List Card -> NeighborExpression -> Bool
@@ -80,9 +64,6 @@ emoji card =
         Rabbit ->
             "🐰"
 
-        Wolf ->
-            "🐺"
-
         Volcano ->
             "🌋"
 
@@ -101,6 +82,9 @@ emoji card =
         Caterpillar ->
             "🐛"
 
+        Bird ->
+            "🐦"
+
 
 transform : Card -> ( Maybe Card, NeighborExpression )
 transform card =
@@ -118,15 +102,14 @@ transform card =
             )
 
         Fire ->
-            ( Nothing, NextTo Water )
+            ( Nothing
+            , NextTo Water
+            )
 
         Rabbit ->
             ( Nothing
-            , Either [ NextTo Wolf, NextTo Eagle ]
+            , NextTo Eagle
             )
-
-        Wolf ->
-            ( Nothing, Anything )
 
         Volcano ->
             ( Just Fire
@@ -151,7 +134,15 @@ transform card =
 
         Caterpillar ->
             ( Nothing
-            , Not (NextTo Tree)
+            , Either
+                [ NextTo Bird
+                , Not (NextTo Tree)
+                ]
+            )
+
+        Bird ->
+            ( Nothing
+            , NextTo Caterpillar
             )
 
 
@@ -177,9 +168,6 @@ produces card =
             , NextTo Tree
             )
 
-        Wolf ->
-            ( card, NextTo Rabbit )
-
         Volcano ->
             ( Fire, Anything )
 
@@ -187,7 +175,12 @@ produces card =
             ( Snow, NextTo Water )
 
         Eagle ->
-            ( card, NextTo Rabbit )
+            ( card
+            , Either
+                [ NextTo Rabbit
+                , NextTo Eagle
+                ]
+            )
 
         Nest ->
             ( Eagle, Anything )
@@ -198,6 +191,9 @@ produces card =
         Caterpillar ->
             ( Butterfly, NextTo Tree )
 
+        Bird ->
+            ( card, NextTo Caterpillar )
+
 
 price : Card -> Int
 price card =
@@ -206,31 +202,31 @@ price card =
             0
 
         Tree ->
-            0
+            5
 
         Fire ->
             0
 
         Rabbit ->
-            10
-
-        Wolf ->
-            10
+            5
 
         Eagle ->
-            10
+            5
 
         Snow ->
-            20
+            5
 
         Volcano ->
-            30
+            5
 
         Nest ->
-            30
+            5
 
         Butterfly ->
-            20
+            5
 
         Caterpillar ->
-            10
+            5
+
+        Bird ->
+            5

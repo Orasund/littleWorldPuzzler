@@ -58,7 +58,7 @@ clearRound game =
 runEnded : Game -> Bool
 runEnded game =
     (game.deck == [] && game.selected == Nothing && game.backpack == Nothing)
-        || (game.turns > Config.maxTurns)
+        || (game.turns <= 0)
         || (List.range 0 (Config.worldSize - 1)
                 |> List.concatMap
                     (\x ->
@@ -130,6 +130,7 @@ buyPack pack game =
         Just
             { game
                 | deck = game.deck ++ Pack.cards pack
+                , turns = Pack.surviveTurns pack
                 , points = game.points - Pack.price pack
             }
 
@@ -184,15 +185,14 @@ placeCard pos game =
     case game.selected of
         Just card ->
             game.world
-                |> Dict.insert pos card
                 |> tick
                 |> (\( world, newCards ) ->
                         { game
-                            | world = world
+                            | world = world |> Dict.insert pos card
                             , deck = game.deck ++ newCards
                             , selected = Nothing
                             , points = game.points + List.length newCards
-                            , turns = game.turns + 1
+                            , turns = game.turns - 1
                         }
                             |> (\g ->
                                     if g |> runEnded then

@@ -86,39 +86,52 @@ viewCardBack : List (Attribute msg) -> Html msg
 viewCardBack attrs =
     Layout.none
         |> Game.Card.back
-            ([ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
-             , Html.Attributes.class "cardback"
-             ]
+            (Game.Card.backgroundImage "assets/seedBack.svg"
+                ++ [ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
+                   , Html.Attributes.style "background-size" "50%"
+                   , Html.Attributes.style "background-color" "#DCEDB9"
+                   ]
                 ++ attrs
             )
 
 
 neighborExp : NeighborExpression -> String
-neighborExp exp =
-    case exp of
-        Card.Either exps ->
-            "either "
-                ++ (exps
-                        |> List.map neighborExp
-                        |> String.join " or"
-                   )
+neighborExp exp0 =
+    let
+        rec exp =
+            case exp of
+                Card.Either exps ->
+                    "either "
+                        ++ (exps
+                                |> List.map rec
+                                |> String.join " or "
+                           )
 
-        Card.NextTo card ->
-            Card.emoji card
+                Card.NextTo card ->
+                    "next to " ++ Card.emoji card
 
-        Card.NextToAtLeast amount card ->
-            Card.emoji card
-                |> List.repeat amount
-                |> String.concat
+                Card.NextToAtLeast amount card ->
+                    "next to "
+                        ++ (Card.emoji card
+                                |> List.repeat amount
+                                |> String.concat
+                           )
 
-        Card.Not e ->
-            "not " ++ neighborExp e
+                Card.Not e ->
+                    "not " ++ rec e
 
+                Card.Anything ->
+                    "placed"
+
+                Card.Something ->
+                    "next to some non empty cell"
+    in
+    case exp0 of
         Card.Anything ->
-            "any cell"
+            " once placed"
 
-        Card.Something ->
-            "some non empty cell"
+        _ ->
+            "if " ++ rec exp0
 
 
 description : List (Attribute msg) -> Card -> Html msg
@@ -133,7 +146,7 @@ description attrs card =
         |> (\( newCard, exp ) ->
                 "Produces "
                     ++ Card.emoji newCard
-                    ++ " if next to "
+                    ++ " "
                     ++ neighborExp exp
                     ++ "."
            )
@@ -148,7 +161,7 @@ description attrs card =
                     |> Maybe.withDefault "Disappears"
                     |> (\string ->
                             string
-                                ++ " if next to "
+                                ++ " "
                                 ++ neighborExp exp
                                 ++ "."
                        )
@@ -187,12 +200,12 @@ cell args maybeCard =
                     |> Maybe.withDefault " "
             }
         |> Layout.withStack []
-            (maybeCard
+            ([ maybeCard
                 |> Maybe.map Card.produces
-                |> Maybe.map
+                |> Maybe.andThen
                     (\( to, exp ) ->
                         if Card.isValidNeighborhoods args.neighbors exp then
-                            [ \attrs ->
+                            (\attrs ->
                                 Card.emoji to
                                     |> Layout.text
                                         (Layout.centered
@@ -206,12 +219,41 @@ cell args maybeCard =
                                                ]
                                             ++ attrs
                                         )
-                            ]
+                            )
+                                |> Just
 
                         else
-                            []
+                            Nothing
                     )
-                |> Maybe.withDefault []
+             , maybeCard
+                |> Maybe.map Card.transform
+                |> Maybe.andThen
+                    (\( to, exp ) ->
+                        if Card.isValidNeighborhoods args.neighbors exp then
+                            (\attrs ->
+                                to
+                                    |> Maybe.map Card.emoji
+                                    |> Maybe.withDefault "☠️"
+                                    |> Layout.text
+                                        (Layout.centered
+                                            ++ [ Html.Attributes.style "border-radius" "8px"
+                                               , Html.Attributes.style "left" "0px"
+                                               , Html.Attributes.style "buttom" "-8px"
+                                               , Html.Attributes.style "height" "24px"
+                                               , Html.Attributes.style "aspect-ratio" "1"
+                                               , Html.Attributes.style "background-color" "white"
+                                               , Html.Attributes.style "border" "1px solid rgba(0,0,0,0.2)"
+                                               ]
+                                            ++ attrs
+                                        )
+                            )
+                                |> Just
+
+                        else
+                            Nothing
+                    )
+             ]
+                |> List.filterMap identity
             )
 
 

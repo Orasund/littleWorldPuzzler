@@ -1,12 +1,9 @@
 module Main exposing (..)
 
 import Browser exposing (Document)
-import Card exposing (Card)
 import Config
 import Dict
 import Game exposing (Effect(..), Game)
-import Game.Card
-import Game.Entity
 import Html
 import Html.Attributes
 import Layout
@@ -46,7 +43,7 @@ view model =
         [ [ [ "Points: "
                 ++ String.fromInt model.game.points
                 |> Layout.text []
-            , "Turn:"
+            , "Turns left:"
                 ++ String.fromInt model.game.turns
                 |> Layout.text []
             , View.button (Just (Restart model.seed)) "Restart"
@@ -164,14 +161,6 @@ button:focus {
 
 button:active {
     filter: brightness(0.7)
-}
-
-.cardback {
-    background-color: #e5e5f7;
-background-image:  linear-gradient(135deg, #444cf7 25%, transparent 25%), linear-gradient(225deg, #444cf7 25%, transparent 25%), linear-gradient(45deg, #444cf7 25%, transparent 25%), linear-gradient(315deg, #444cf7 25%, #e5e5f7 25%);
-background-position:  10px 0, 10px 0, 0 0, 0 0;
-background-size: 20px 20px;
-background-repeat: repeat;
 }
 """ ]
         ]
