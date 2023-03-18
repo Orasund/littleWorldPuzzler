@@ -188,8 +188,8 @@ cell args maybeCard =
         |> Html.text
         |> Layout.button
             (Layout.centered
-                ++ [ Html.Attributes.style "width" "64px"
-                   , Html.Attributes.style "height" "64px"
+                ++ [ Html.Attributes.style "width" "80px"
+                   , Html.Attributes.style "height" "80px"
                    , Html.Attributes.style "border-radius" "16px"
                    , Html.Attributes.style "font-size" "48px"
                    , Html.Attributes.style

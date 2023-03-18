@@ -68,7 +68,7 @@ view model =
                 ]
 
              else
-                List.range 0 (Config.worldSize - 1)
+                [ List.range 0 (Config.worldSize - 1)
                     |> List.map
                         (\y ->
                             List.range 0 (Config.worldSize - 1)
@@ -89,11 +89,24 @@ view model =
                                     )
                                 |> Layout.row [ Layout.gap 8 ]
                         )
+                    |> Layout.column [ Layout.gap 8 ]
+                , model.game.selected
+                    |> Maybe.map
+                        (View.description
+                            [ Html.Attributes.style "bottom" "-100px"
+                            , Html.Attributes.style "left" (String.fromFloat (Config.cardWidth * 1.5 + 5) ++ "px")
+                            , Html.Attributes.style "width" "200px"
+                            , Html.Attributes.style "border" "1px dashed rgba(0,0,0,0.2)"
+                            , Html.Attributes.style "padding" "8px"
+                            ]
+                        )
+                    |> Maybe.withDefault Layout.none
+                ]
             )
                 |> Layout.column
-                    ([ Layout.fill, Layout.gap 8 ]
-                        ++ Layout.centered
-                    )
+                    [ Layout.fill
+                    , Layout.contentWithSpaceBetween
+                    ]
           , [ [ "Click to swap" |> Layout.text []
               , model.game.backpack
                     |> Maybe.map (View.viewCard [])
@@ -105,23 +118,7 @@ view model =
               ]
                 |> Layout.column [ Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px") ]
             , model.game.selected
-                |> Maybe.map
-                    (\card ->
-                        [ View.description
-                            [ Html.Attributes.style "bottom" "-100px"
-                            , Html.Attributes.style "left" (String.fromFloat (Config.cardWidth * 1.5 + 5) ++ "px")
-                            , Html.Attributes.style "width" "200px"
-                            , Html.Attributes.style "border" "1px dashed rgba(0,0,0,0.2)"
-                            , Html.Attributes.style "padding" "8px"
-                            ]
-                            card
-                        , View.viewCard [] card
-                        ]
-                            |> Layout.column
-                                [ Layout.alignAtCenter
-                                , Layout.gap 8
-                                ]
-                    )
+                |> Maybe.map (View.viewCard [])
                 |> Maybe.withDefault Layout.none
             , model.game.deck
                 |> View.deck model.game.pack

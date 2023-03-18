@@ -6690,7 +6690,6 @@ var $author$project$Main$ClickedAt = function (a) {
 var $author$project$Main$SwapCards = {$: 'SwapCards'};
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $Orasund$elm_layout$Layout$alignAtCenter = A2($elm$html$Html$Attributes$style, 'align-items', 'center');
 var $Orasund$elm_layout$Layout$alignAtEnd = A2($elm$html$Html$Attributes$style, 'align-items', 'flex-end');
 var $elm$virtual_dom$VirtualDom$attribute = F2(
 	function (key, value) {
@@ -6790,6 +6789,7 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
+var $Orasund$elm_layout$Layout$alignAtCenter = A2($elm$html$Html$Attributes$style, 'align-items', 'center');
 var $Orasund$elm_layout$Layout$contentCentered = A2($elm$html$Html$Attributes$style, 'justify-content', 'center');
 var $Orasund$elm_layout$Layout$centered = _List_fromArray(
 	[$Orasund$elm_layout$Layout$contentCentered, $Orasund$elm_layout$Layout$alignAtCenter]);
@@ -6937,8 +6937,8 @@ var $author$project$View$cell = F2(
 					$Orasund$elm_layout$Layout$centered,
 					_List_fromArray(
 						[
-							A2($elm$html$Html$Attributes$style, 'width', '64px'),
-							A2($elm$html$Html$Attributes$style, 'height', '64px'),
+							A2($elm$html$Html$Attributes$style, 'width', '80px'),
+							A2($elm$html$Html$Attributes$style, 'height', '80px'),
 							A2($elm$html$Html$Attributes$style, 'border-radius', '16px'),
 							A2($elm$html$Html$Attributes$style, 'font-size', '48px'),
 							A2($elm$html$Html$Attributes$style, 'border', '1px solid rgba(0,0,0,0.2)')
@@ -7496,13 +7496,8 @@ var $author$project$Main$view = function (model) {
 								])),
 							A2(
 							$Orasund$elm_layout$Layout$column,
-							_Utils_ap(
-								_List_fromArray(
-									[
-										$Orasund$elm_layout$Layout$fill,
-										$Orasund$elm_layout$Layout$gap(8)
-									]),
-								$Orasund$elm_layout$Layout$centered),
+							_List_fromArray(
+								[$Orasund$elm_layout$Layout$fill, $Orasund$elm_layout$Layout$contentWithSpaceBetween]),
 							model.viewShop ? _List_fromArray(
 								[
 									A2($Orasund$elm_layout$Layout$text, _List_Nil, 'Choose a Pack'),
@@ -7535,42 +7530,69 @@ var $author$project$Main$view = function (model) {
 													]));
 										},
 										$author$project$Pack$asList))
-								]) : A2(
-								$elm$core$List$map,
-								function (y) {
-									return A2(
-										$Orasund$elm_layout$Layout$row,
-										_List_fromArray(
-											[
-												$Orasund$elm_layout$Layout$gap(8)
-											]),
-										A2(
-											$elm$core$List$map,
-											function (x) {
-												return function (maybeCard) {
-													return A2(
-														$author$project$View$cell,
-														{
-															clicked: $author$project$Main$ClickedAt(
-																_Utils_Tuple2(x, y)),
-															neighbors: A2(
-																$elm$core$List$filterMap,
-																function (p) {
-																	return A2($elm$core$Dict$get, p, model.game.world);
+								]) : _List_fromArray(
+								[
+									A2(
+									$Orasund$elm_layout$Layout$column,
+									_List_fromArray(
+										[
+											$Orasund$elm_layout$Layout$gap(8)
+										]),
+									A2(
+										$elm$core$List$map,
+										function (y) {
+											return A2(
+												$Orasund$elm_layout$Layout$row,
+												_List_fromArray(
+													[
+														$Orasund$elm_layout$Layout$gap(8)
+													]),
+												A2(
+													$elm$core$List$map,
+													function (x) {
+														return function (maybeCard) {
+															return A2(
+																$author$project$View$cell,
+																{
+																	clicked: $author$project$Main$ClickedAt(
+																		_Utils_Tuple2(x, y)),
+																	neighbors: A2(
+																		$elm$core$List$filterMap,
+																		function (p) {
+																			return A2($elm$core$Dict$get, p, model.game.world);
+																		},
+																		$author$project$Game$neighborsOf(
+																			_Utils_Tuple2(x, y)))
 																},
-																$author$project$Game$neighborsOf(
-																	_Utils_Tuple2(x, y)))
-														},
-														maybeCard);
-												}(
+																maybeCard);
+														}(
+															A2(
+																$elm$core$Dict$get,
+																_Utils_Tuple2(x, y),
+																model.game.world));
+													},
+													A2($elm$core$List$range, 0, $author$project$Config$worldSize - 1)));
+										},
+										A2($elm$core$List$range, 0, $author$project$Config$worldSize - 1))),
+									A2(
+									$elm$core$Maybe$withDefault,
+									$Orasund$elm_layout$Layout$none,
+									A2(
+										$elm$core$Maybe$map,
+										$author$project$View$description(
+											_List_fromArray(
+												[
+													A2($elm$html$Html$Attributes$style, 'bottom', '-100px'),
 													A2(
-														$elm$core$Dict$get,
-														_Utils_Tuple2(x, y),
-														model.game.world));
-											},
-											A2($elm$core$List$range, 0, $author$project$Config$worldSize - 1)));
-								},
-								A2($elm$core$List$range, 0, $author$project$Config$worldSize - 1))),
+													$elm$html$Html$Attributes$style,
+													'left',
+													$elm$core$String$fromFloat(($author$project$Config$cardWidth * 1.5) + 5) + 'px'),
+													A2($elm$html$Html$Attributes$style, 'width', '200px'),
+													A2($elm$html$Html$Attributes$style, 'border', '1px dashed rgba(0,0,0,0.2)'),
+													A2($elm$html$Html$Attributes$style, 'padding', '8px')
+												])),
+										model.game.selected))
+								])),
 							A2(
 							$Orasund$elm_layout$Layout$row,
 							_List_fromArray(
@@ -7613,33 +7635,7 @@ var $author$project$Main$view = function (model) {
 									$Orasund$elm_layout$Layout$none,
 									A2(
 										$elm$core$Maybe$map,
-										function (card) {
-											return A2(
-												$Orasund$elm_layout$Layout$column,
-												_List_fromArray(
-													[
-														$Orasund$elm_layout$Layout$alignAtCenter,
-														$Orasund$elm_layout$Layout$gap(8)
-													]),
-												_List_fromArray(
-													[
-														A2(
-														$author$project$View$description,
-														_List_fromArray(
-															[
-																A2($elm$html$Html$Attributes$style, 'bottom', '-100px'),
-																A2(
-																$elm$html$Html$Attributes$style,
-																'left',
-																$elm$core$String$fromFloat(($author$project$Config$cardWidth * 1.5) + 5) + 'px'),
-																A2($elm$html$Html$Attributes$style, 'width', '200px'),
-																A2($elm$html$Html$Attributes$style, 'border', '1px dashed rgba(0,0,0,0.2)'),
-																A2($elm$html$Html$Attributes$style, 'padding', '8px')
-															]),
-														card),
-														A2($author$project$View$viewCard, _List_Nil, card)
-													]));
-										},
+										$author$project$View$viewCard(_List_Nil),
 										model.game.selected)),
 									A2($author$project$View$deck, model.game.pack, model.game.deck)
 								]))
