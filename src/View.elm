@@ -46,25 +46,26 @@ viewCard attrs card =
 
 viewPack : Pack -> Html msg
 viewPack pack =
-    Pack.cards pack
+    [ (\attrs ->
+        viewCardBack pack
+            (attrs ++ [ Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px") ])
+      )
+        |> Game.Entity.new
+        |> List.repeat (List.length (Pack.cards pack))
         |> List.indexedMap
-            (\i card ->
-                (\attrs -> viewCard attrs card)
-                    |> Game.Entity.new
-                    |> Game.Entity.move ( toFloat i * 16, 0 )
+            (\i ->
+                Game.Entity.move ( 0, toFloat (List.length (Pack.cards pack) * 3) - toFloat i * 3 )
             )
         |> Game.Entity.pileAbove
             (Layout.el
-                [ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
-                , Html.Attributes.style "width"
+                [ Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px")
+                , Html.Attributes.style "height"
                     (String.fromFloat
-                        (Config.cardWidth
-                            + (Pack.cards pack
-                                |> List.length
-                                |> (+) -1
-                                |> (*) 16
-                                |> toFloat
-                              )
+                        (Config.cardHeight
+                            + toFloat
+                                (List.length (Pack.cards pack)
+                                    * 3
+                                )
                         )
                         ++ "px"
                     )
@@ -72,6 +73,14 @@ viewPack pack =
                 Layout.none
             )
         |> Game.Entity.toHtml []
+    , Pack.cards pack
+        |> List.map Card.emoji
+        |> String.concat
+        |> Layout.text
+            [ Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px")
+            ]
+    ]
+        |> Layout.column [ Layout.gap 8 ]
 
 
 viewEmptyCard : String -> Html msg
@@ -89,6 +98,12 @@ viewCardBack pack attrs =
             case pack of
                 Pack.IntroFire ->
                     ( "assets/fireBack.svg", "#F7B1AB" )
+
+                Pack.IntroTree ->
+                    ( "assets/leaveBack.svg", "#DCEDB9" )
+
+                Pack.IntroVolcano ->
+                    ( "assets/volcanoBack.svg", "#FF4B3E" )
 
                 _ ->
                     ( "assets/seedBack.svg", "#DCEDB9" )
@@ -119,12 +134,10 @@ neighborExp exp0 =
                 Card.NextTo card ->
                     "next to " ++ Card.emoji card
 
-                Card.NextToAtLeast amount card ->
+                Card.NextToTwo card ->
                     "next to "
-                        ++ (Card.emoji card
-                                |> List.repeat amount
-                                |> String.concat
-                           )
+                        ++ Card.emoji card
+                        ++ Card.emoji card
 
                 Card.Not e ->
                     "not " ++ rec e
@@ -292,3 +305,26 @@ deck pack cards =
                     ]
             )
         |> Game.Entity.toHtml []
+
+
+overlay : List (Attribute msg) -> List (Html msg) -> Html msg
+overlay attrs content =
+    content
+        |> Layout.column
+            ([ Html.Attributes.style "background-color" "white"
+             , Html.Attributes.style "border" "solid 1px rgba(0,0,0,0.2)"
+             , Html.Attributes.style "padding" "32px"
+             , Html.Attributes.style "border-radius" "8px"
+             , Layout.gap 16
+             ]
+                ++ Layout.centered
+            )
+        |> Layout.el
+            ([ Html.Attributes.style "backdrop-filter" "blur(4px)"
+             , Html.Attributes.style "width" "100%"
+             , Html.Attributes.style "height" "100%"
+             , Html.Attributes.style "z-index" "1000"
+             ]
+                ++ attrs
+                ++ Layout.centered
+            )

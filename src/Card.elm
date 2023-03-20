@@ -18,7 +18,7 @@ type Card
 type NeighborExpression
     = Either (List NeighborExpression)
     | NextTo Card
-    | NextToAtLeast Int Card
+    | NextToTwo Card
     | Not NeighborExpression
     | Anything
     | Something
@@ -33,11 +33,11 @@ isValidNeighborhoods neighborhood exp =
         NextTo card ->
             neighborhood |> List.member card
 
-        NextToAtLeast amount card ->
+        NextToTwo card ->
             neighborhood
                 |> List.filter ((==) card)
                 |> List.length
-                |> (\int -> int >= amount)
+                |> (\int -> int >= 2)
 
         Not e ->
             not (isValidNeighborhoods neighborhood e)
@@ -113,7 +113,7 @@ transform card =
 
         Volcano ->
             ( Just Fire
-            , NextToAtLeast 2 Fire
+            , NextToTwo Fire
             )
 
         Snow ->
@@ -124,7 +124,7 @@ transform card =
 
         Nest ->
             ( Nothing
-            , NextToAtLeast 2 Fire
+            , NextToTwo Fire
             )
 
         Butterfly ->
@@ -158,7 +158,7 @@ produces card =
         Fire ->
             ( card
             , Either
-                [ NextToAtLeast 2 Fire
+                [ NextToTwo Fire
                 , NextTo Tree
                 ]
             )
@@ -192,7 +192,12 @@ produces card =
             ( Butterfly, NextTo Tree )
 
         Bird ->
-            ( card, NextTo Caterpillar )
+            ( card
+            , Either
+                [ NextTo Caterpillar
+                , NextToTwo Bird
+                ]
+            )
 
 
 price : Card -> Int

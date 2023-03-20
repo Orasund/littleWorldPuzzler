@@ -6,7 +6,7 @@ import Svg.Writer
 
 
 main =
-    Svg.fireBack
+    Svg.leaveBack
         |> Svg.Writer.toProgram
             { name = "image"
             , width = 100

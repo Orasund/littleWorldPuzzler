@@ -6,9 +6,8 @@ import Card exposing (Card)
 type Pack
     = IntroFire
     | IntroTree
-    | RabbitRampage
+    | IntroRabbit
     | IntroVolcano
-    | FoodChain
     | IntroButterfly
     | IntroBird
     | IntroIce
@@ -18,9 +17,8 @@ asList : List Pack
 asList =
     [ IntroFire
     , IntroTree
-    , RabbitRampage
+    , IntroRabbit
     , IntroVolcano
-    , FoodChain
     , IntroButterfly
     , IntroBird
     , IntroIce
@@ -40,20 +38,17 @@ cards pack =
         IntroButterfly ->
             [ Card.Tree, Card.Tree, Card.Butterfly, Card.Butterfly ]
 
-        RabbitRampage ->
+        IntroRabbit ->
             [ Card.Butterfly, Card.Butterfly, Card.Tree, Card.Rabbit, Card.Eagle ]
 
         IntroVolcano ->
             [ Card.Water, Card.Water, Card.Volcano, Card.Volcano ]
 
-        FoodChain ->
-            [ Card.Rabbit, Card.Rabbit, Card.Tree, Card.Tree, Card.Water, Card.Nest ]
-
         IntroBird ->
             [ Card.Tree, Card.Tree, Card.Butterfly, Card.Butterfly, Card.Bird, Card.Bird, Card.Bird, Card.Bird, Card.Bird ]
 
         IntroIce ->
-            [  Card.Snow,Card.Snow,Card.Snow,Card.Water,Card.Volcano]
+            [ Card.Snow, Card.Snow, Card.Snow, Card.Water, Card.Volcano ]
 
 
 price : Pack -> Int
