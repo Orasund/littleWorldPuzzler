@@ -6,21 +6,47 @@ type Card
     | Water
     | Tree
     | Rabbit
-    | Wolf
     | Volcano
     | Snow
+    | Eagle
+    | Nest
+    | Butterfly
+    | Caterpillar
+    | Bird
 
 
-asList : List Card
-asList =
-    [ Water
-    , Fire
-    , Tree
-    , Rabbit
-    , Wolf
-    , Volcano
-    , Snow
-    ]
+type NeighborExpression
+    = Either (List NeighborExpression)
+    | NextTo Card
+    | NextToTwo Card
+    | Not NeighborExpression
+    | Anything
+    | Something
+
+
+isValidNeighborhoods : List Card -> NeighborExpression -> Bool
+isValidNeighborhoods neighborhood exp =
+    case exp of
+        Either exps ->
+            exps |> List.any (isValidNeighborhoods neighborhood)
+
+        NextTo card ->
+            neighborhood |> List.member card
+
+        NextToTwo card ->
+            neighborhood
+                |> List.filter ((==) card)
+                |> List.length
+                |> (\int -> int >= 2)
+
+        Not e ->
+            not (isValidNeighborhoods neighborhood e)
+
+        Anything ->
+            True
+
+        Something ->
+            neighborhood /= []
 
 
 emoji : Card -> String
@@ -38,92 +64,174 @@ emoji card =
         Rabbit ->
             "🐰"
 
-        Wolf ->
-            "🐺"
-
         Volcano ->
             "🌋"
 
         Snow ->
             "❄️"
 
+        Eagle ->
+            "🦅"
 
-transform : Card -> ( Maybe Card, List Card -> Bool )
+        Nest ->
+            "\u{1FABA}"
+
+        Butterfly ->
+            "🦋"
+
+        Caterpillar ->
+            "🐛"
+
+        Bird ->
+            "🐦"
+
+
+transform : Card -> ( Maybe Card, NeighborExpression )
 transform card =
     case card of
         Water ->
-            ( Nothing, always True )
+            ( Nothing, Anything )
 
         Tree ->
-            ( Just Fire, List.member Fire )
+            ( Nothing
+            , Either
+                [ NextTo Fire
+                , NextTo Rabbit
+                , NextTo Caterpillar
+                ]
+            )
 
         Fire ->
-            ( Nothing, List.member Water )
+            ( Nothing
+            , NextTo Water
+            )
 
         Rabbit ->
-            ( Just Wolf, List.member Wolf )
-
-        Wolf ->
-            ( Nothing, always True )
+            ( Nothing
+            , NextTo Eagle
+            )
 
         Volcano ->
-            ( Nothing, List.member Fire )
+            ( Just Fire
+            , NextToTwo Fire
+            )
 
         Snow ->
-            ( Just Water, List.member Fire )
+            ( Just Water, NextTo Fire )
+
+        Eagle ->
+            ( Nothing, NextTo Rabbit )
+
+        Nest ->
+            ( Nothing
+            , NextToTwo Fire
+            )
+
+        Butterfly ->
+            ( Just Caterpillar
+            , NextTo Tree
+            )
+
+        Caterpillar ->
+            ( Nothing
+            , Either
+                [ NextTo Bird
+                , Not (NextTo Tree)
+                ]
+            )
+
+        Bird ->
+            ( Nothing
+            , NextTo Caterpillar
+            )
 
 
-produces : Card -> ( Card, List Card -> Bool )
+produces : Card -> ( Card, NeighborExpression )
 produces card =
     case card of
         Water ->
-            ( card, (/=) [] )
+            ( card, Something )
 
         Tree ->
-            ( card, List.member Water )
+            ( card, NextTo Water )
 
         Fire ->
-            ( card, (==) (List.repeat 4 Fire) )
+            ( card
+            , Either
+                [ NextToTwo Fire
+                , NextTo Tree
+                ]
+            )
 
         Rabbit ->
             ( card
-            , \neighbors ->
-                neighbors
-                    |> List.filter ((==) Tree)
-                    |> List.length
-                    |> (\int -> int >= 2)
+            , NextTo Tree
             )
 
-        Wolf ->
-            ( card, (==) (List.repeat 4 Rabbit) )
-
         Volcano ->
-            ( Fire, always True )
+            ( Fire, Anything )
 
         Snow ->
-            ( Snow, List.member Water )
+            ( Snow, NextTo Water )
+
+        Eagle ->
+            ( card
+            , Either
+                [ NextTo Rabbit
+                , NextTo Eagle
+                ]
+            )
+
+        Nest ->
+            ( Eagle, Anything )
+
+        Butterfly ->
+            ( Tree, NextTo Tree )
+
+        Caterpillar ->
+            ( Butterfly, NextTo Tree )
+
+        Bird ->
+            ( card
+            , Either
+                [ NextTo Caterpillar
+                , NextToTwo Bird
+                ]
+            )
 
 
 price : Card -> Int
 price card =
     case card of
         Water ->
-            5
+            0
 
         Tree ->
             5
 
         Fire ->
-            5
+            0
 
         Rabbit ->
             5
 
-        Wolf ->
-            10
+        Eagle ->
+            5
 
         Snow ->
-            15
+            5
 
         Volcano ->
-            20
+            5
+
+        Nest ->
+            5
+
+        Butterfly ->
+            5
+
+        Caterpillar ->
+            5
+
+        Bird ->
+            5

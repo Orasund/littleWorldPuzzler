@@ -1,36 +1,40 @@
 module Main exposing (..)
 
 import Browser exposing (Document)
-import Card exposing (Card)
 import Config
 import Dict
-import Game exposing (Effect(..), Game)
+import Game exposing (Effect(..), Game, Overlay(..))
+import Game.Entity
 import Html
 import Html.Attributes
+import Html.Events
 import Layout
+import Pack exposing (Pack)
 import Random exposing (Seed)
+import Round
 import View
 
 
 type alias Model =
     { game : Game
+    , overlay : Maybe Overlay
     , seed : Seed
-    , viewShop : Bool
     }
 
 
 type Msg
     = ClickedAt ( Int, Int )
-    | BoughtCard Card
+    | SwapCards
+    | BoughtPack Pack
+    | CloseOverlay
     | Restart Seed
-    | CloseShop
 
 
 init : () -> ( Model, Cmd Msg )
 init () =
     ( { game = Game.init
+      , overlay = Nothing
       , seed = Random.initialSeed 42
-      , viewShop = False
       }
     , Random.generate Restart Random.independentSeed
     )
@@ -40,79 +44,141 @@ view : Model -> Document Msg
 view model =
     { title = "Little World Puzzler"
     , body =
-        [ [ [ "Points: "
-                ++ String.fromInt model.game.points
-                |> Html.text
-                |> Layout.el []
-            , View.button (Just (Restart model.seed)) "Restart"
-            ]
-                |> Layout.row
-                    [ Layout.contentWithSpaceBetween
-                    , Html.Attributes.style "width" "100%"
-                    ]
-          , (if model.viewShop then
-                [ "Buy Cards" |> Html.text |> Layout.el []
-                , Card.asList
-                    |> List.map
-                        (\card ->
-                            Card.emoji card
-                                ++ " for "
-                                ++ String.fromInt (Card.price card)
-                                |> View.button (Just (BoughtCard card))
+        [ (case model.game.round of
+            Just round ->
+                [ [ "Points: "
+                        ++ String.fromInt model.game.totalPoints
+                        ++ " + "
+                        ++ String.fromInt round.points
+                        |> Layout.text []
+                  , "Turns left:"
+                        ++ String.fromInt round.turns
+                        |> Layout.text []
+                  , View.button (Just (Restart model.seed)) "Restart"
+                  ]
+                    |> Layout.row
+                        [ Layout.contentWithSpaceBetween
+                        , Html.Attributes.style "width" "100%"
+                        ]
+                , [ List.range 0 (Config.worldSize - 1)
+                        |> List.map
+                            (\y ->
+                                List.range 0 (Config.worldSize - 1)
+                                    |> List.map
+                                        (\x ->
+                                            round.world
+                                                |> Dict.get ( x, y )
+                                                |> (\maybeCard ->
+                                                        View.cell
+                                                            { clicked = ClickedAt ( x, y )
+                                                            , neighbors =
+                                                                Round.neighborsOf ( x, y )
+                                                                    |> List.filterMap
+                                                                        (\p -> Dict.get p round.world)
+                                                            }
+                                                            maybeCard
+                                                   )
+                                        )
+                                    |> Layout.row [ Layout.gap 8 ]
+                            )
+                        |> Layout.column [ Layout.gap 8 ]
+                  , round.selected
+                        |> Maybe.map
+                            (View.description
+                                [ Html.Attributes.style "bottom" "-100px"
+                                , Html.Attributes.style "left" (String.fromFloat (Config.cardWidth * 1.5 + 5) ++ "px")
+                                , Html.Attributes.style "width" "200px"
+                                , Html.Attributes.style "border" "1px dashed rgba(0,0,0,0.2)"
+                                , Html.Attributes.style "padding" "8px"
+                                ]
+                            )
+                        |> Maybe.withDefault Layout.none
+                  ]
+                    |> Layout.column
+                        [ Layout.fill
+                        , Layout.contentWithSpaceBetween
+                        ]
+                , [ Layout.el [ Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px") ] Layout.none
+                  , [ round.backpack
+                        |> Maybe.map
+                            (\card ->
+                                (\attrs -> View.viewCard attrs card)
+                                    |> Game.Entity.new
+                                    |> Game.Entity.rotate (-pi / 8)
+                                    |> Game.Entity.move ( -10, 0 )
+                            )
+                    , round.selected
+                        |> Maybe.map
+                            (\card ->
+                                (\attrs -> View.viewCard attrs card)
+                                    |> Game.Entity.new
+                            )
+                    , if round.backpack /= Nothing then
+                        (\attrs ->
+                            "Click to swap"
+                                |> Layout.text attrs
                         )
-                    |> Layout.row [ Layout.gap 8 ]
-                , View.button (Just CloseShop) "Close"
+                            |> Game.Entity.new
+                            |> Game.Entity.rotate (-pi / 8)
+                            |> Game.Entity.move ( -65, Config.cardHeight - 60 )
+                            |> Just
+
+                      else
+                        Nothing
+                    ]
+                        |> List.filterMap identity
+                        |> Game.Entity.pileAbove
+                            (View.viewEmptyCard "Hand")
+                        |> Game.Entity.toHtml [ Html.Events.onClick SwapCards ]
+                  , round.deck
+                        |> View.deck round.pack
+                  ]
+                    |> Layout.row
+                        [ Layout.contentWithSpaceBetween
+                        , Html.Attributes.style "width" "100%"
+                        , Layout.alignAtEnd
+                        ]
                 ]
 
-             else
-                List.range 0 (Config.worldSize - 1)
-                    |> List.map
-                        (\y ->
-                            List.range 0 (Config.worldSize - 1)
-                                |> List.map
-                                    (\x ->
-                                        model.game.world
-                                            |> Dict.get ( x, y )
-                                            |> (\maybeCard ->
-                                                    View.cell
-                                                        { clicked = ClickedAt ( x, y )
-                                                        , neighbors =
-                                                            Game.neighborsOf ( x, y )
-                                                                |> List.filterMap
-                                                                    (\p -> Dict.get p model.game.world)
-                                                        }
-                                                        maybeCard
-                                               )
-                                    )
-                                |> Layout.row [ Layout.gap 8 ]
-                        )
-            )
-                |> Layout.column
-                    ([ Layout.fill, Layout.gap 8 ]
-                        ++ Layout.centered
-                    )
-          , [ "Selected:"
-                ++ (model.game.selected
-                        |> Maybe.map Card.emoji
-                        |> Maybe.withDefault ""
-                   )
-                |> Html.text
-                |> Layout.el []
-            , "Deck: "
-                ++ (model.game.deck
-                        |> List.map Card.emoji
-                        |> String.concat
-                   )
-                |> Html.text
-                |> Layout.el []
-            ]
-                |> Layout.row
-                    [ Layout.contentWithSpaceBetween
-                    , Html.Attributes.style "width" "100%"
-                    ]
-          ]
+            Nothing ->
+                [ [ "Points: "
+                        ++ String.fromInt model.game.totalPoints
+                        |> Layout.text []
+                  , View.button (Just (Restart model.seed)) "Restart"
+                  ]
+                    |> Layout.row
+                        [ Layout.contentWithSpaceBetween
+                        , Html.Attributes.style "width" "100%"
+                        ]
+                , [ "Choose a Pack" |> Layout.text []
+                  , Pack.asList
+                        |> List.map
+                            (\pack ->
+                                [ "Play for "
+                                    ++ String.fromInt (Pack.price pack)
+                                    |> Layout.text []
+                                , pack |> View.viewPack
+                                ]
+                                    |> Layout.column
+                                        (Layout.asButton
+                                            { label = "Play for " ++ String.fromInt (Pack.price pack)
+                                            , onPress = Just (BoughtPack pack)
+                                            }
+                                            ++ [ Layout.alignAtCenter
+                                               , Layout.contentAtStart
+                                               ]
+                                        )
+                            )
+                        |> Layout.row [ Layout.gap 8 ]
+                  ]
+                    |> Layout.column
+                        [ Layout.fill
+                        , Layout.contentWithSpaceBetween
+                        ]
+                ]
+          )
             |> Layout.column
-                ([ Layout.gap 32
+                ([ Layout.gap 16
                  , Html.Attributes.style "width" "400px"
                  , Html.Attributes.style "height" "600px"
                  , Html.Attributes.style "border" "1px solid rgba(0,0,0,0.2)"
@@ -121,9 +187,45 @@ view model =
                  ]
                     ++ Layout.centered
                 )
-            |> Layout.el
+            |> Layout.withStack
                 (Html.Attributes.style "height" "100%"
                     :: Layout.centered
+                )
+                (case model.overlay of
+                    Just (Game.GameWon args) ->
+                        [ \attrs ->
+                            [ "🎉" |> Layout.text [ Html.Attributes.style "font-size" "40px" ]
+                            , "You win"
+                                |> Layout.text
+                                    [ Html.Attributes.style "font-size" "20px"
+                                    ]
+                            , "Score" |> Layout.text []
+                            , String.fromInt args.score |> Layout.text []
+                            ]
+                                |> View.overlay
+                                    ([ Html.Events.onClick CloseOverlay
+                                     ]
+                                        ++ attrs
+                                    )
+                        ]
+
+                    Just Game.GameLost ->
+                        [ \attrs ->
+                            [ "☠️" |> Layout.text [ Html.Attributes.style "font-size" "40px" ]
+                            , "You Lost "
+                                |> Layout.text
+                                    [ Html.Attributes.style "font-size" "20px"
+                                    ]
+                            ]
+                                |> View.overlay
+                                    ([ Html.Events.onClick CloseOverlay
+                                     ]
+                                        ++ attrs
+                                    )
+                        ]
+
+                    Nothing ->
+                        []
                 )
         , Html.node "style" [] [ Html.text """
 :root, body {
@@ -149,8 +251,8 @@ button:active {
 applyEffect : Effect -> Model -> Model
 applyEffect effect model =
     case effect of
-        OpenShop ->
-            { model | viewShop = True }
+        OpenOverlay overlay ->
+            { model | overlay = Just overlay }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -170,35 +272,41 @@ update msg model =
             , Cmd.none
             )
 
-        BoughtCard card ->
-            ( model.game
-                |> Game.buyCard card
-                |> (\it -> { model | game = it })
+        SwapCards ->
+            Random.step (Game.swapCards model.game) model.seed
+                |> (\( game, seed ) ->
+                        ( { model | game = game, seed = seed }
+                        , Cmd.none
+                        )
+                   )
+
+        BoughtPack pack ->
+            model.game
+                |> Game.buyPack pack
+                |> Maybe.map (\gen -> Random.step gen model.seed)
+                |> Maybe.map
+                    (\( game, seed ) ->
+                        ( { model
+                            | game = game
+                            , seed = seed
+                          }
+                        , Cmd.none
+                        )
+                    )
+                |> Maybe.withDefault ( model, Cmd.none )
+
+        CloseOverlay ->
+            ( { model | overlay = Nothing }
             , Cmd.none
             )
 
         Restart initialSeed ->
-            Random.step (Game.drawCard Game.init) initialSeed
-                |> (\( game, seed ) ->
-                        ( { model
-                            | game = game
-                            , seed = seed
-                          }
-                        , Cmd.none
-                        )
-                   )
-
-        CloseShop ->
-            Random.step (Game.drawCard model.game) model.seed
-                |> (\( game, seed ) ->
-                        ( { model
-                            | game = game
-                            , seed = seed
-                            , viewShop = False
-                          }
-                        , Cmd.none
-                        )
-                   )
+            ( { model
+                | game = Game.init
+                , seed = initialSeed
+              }
+            , Cmd.none
+            )
 
 
 subscriptions : Model -> Sub Msg

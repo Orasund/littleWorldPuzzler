@@ -3,162 +3,114 @@ module Game exposing (..)
 import Card exposing (Card)
 import Config
 import Dict exposing (Dict)
+import Pack exposing (Pack)
 import Random exposing (Generator)
+import Round exposing (Round, drawCard)
 
 
 type alias Game =
-    { world : Dict ( Int, Int ) Card
-    , selected : Maybe Card
-    , deck : List Card
-    , points : Int
+    { round : Maybe Round
+    , totalPoints : Int
     }
 
 
+type Overlay
+    = GameWon { score : Int }
+    | GameLost
+
+
 type Effect
-    = OpenShop
-
-
-shuffle : List a -> Generator (List a)
-shuffle list =
-    Random.list (List.length list) (Random.float 0 1)
-        |> Random.map
-            (\randomList ->
-                randomList
-                    |> List.map2 Tuple.pair list
-                    |> List.sortBy Tuple.second
-                    |> List.map Tuple.first
-            )
+    = OpenOverlay Overlay
 
 
 init : Game
 init =
-    { world = Dict.empty
-    , selected = Nothing
-    , deck =
-        [ Card.Tree, Card.Tree, Card.Water, Card.Water, Card.Fire ]
-    , points = 0
+    { round = Nothing
+    , totalPoints = 0
     }
 
 
-runEnded : Game -> Bool
-runEnded game =
-    (game.deck == [])
-        || (List.range 0 (Config.worldSize - 1)
-                |> List.concatMap
-                    (\x ->
-                        List.range 0 (Config.worldSize - 1)
-                            |> List.map (Tuple.pair x)
-                    )
-                |> List.all (\p -> Dict.get p game.world /= Nothing)
-           )
-
-
-drawCard : Game -> Generator Game
-drawCard game =
-    game.deck
-        |> shuffle
-        |> Random.map
-            (\list ->
-                case list of
-                    head :: tail ->
-                        { game
-                            | selected = Just head
-                            , deck = tail
-                        }
-
-                    [] ->
-                        { game
-                            | selected = Nothing
-                            , deck = []
-                        }
+wonGame : Game -> Game
+wonGame game =
+    game.round
+        |> Maybe.map
+            (\round ->
+                { game
+                    | totalPoints = game.totalPoints + round.points
+                    , round = Nothing
+                }
             )
+        |> Maybe.withDefault game
 
 
-buyCard : Card -> Game -> Game
-buyCard card game =
-    if game.points >= Card.price card then
-        { game
-            | deck = game.deck ++ [ card ]
-            , points = game.points - Card.price card
-        }
+swapCards : Game -> Generator Game
+swapCards game =
+    game.round
+        |> Maybe.map Round.swapCards
+        |> Maybe.map
+            (\round ->
+                if round.backpack == Nothing || round.selected == Nothing then
+                    Round.drawCard round
+
+                else
+                    Random.constant round
+            )
+        |> Maybe.map (Random.map (\round -> { game | round = Just round }))
+        |> Maybe.withDefault (Random.constant game)
+
+
+buyPack : Pack -> Game -> Maybe (Generator Game)
+buyPack pack game =
+    if game.totalPoints >= Pack.price pack then
+        Round.new pack
+            |> Round.drawCard
+            |> Random.map
+                (\round ->
+                    { game
+                        | round = round |> Just
+                        , totalPoints = game.totalPoints - Pack.price pack
+                    }
+                )
+            |> Just
 
     else
-        game
-
-
-neighborsOf : ( Int, Int ) -> List ( Int, Int )
-neighborsOf ( x, y ) =
-    [ ( x + 1, y ), ( x, y + 1 ), ( x, y - 1 ), ( x - 1, y ) ]
-
-
-tick : Dict ( Int, Int ) Card -> ( Dict ( Int, Int ) Card, List Card )
-tick world =
-    world
-        |> Dict.foldl
-            (\pos card ( output, newCards ) ->
-                pos
-                    |> neighborsOf
-                    |> List.filterMap (\p -> world |> Dict.get p)
-                    |> (\neighbors ->
-                            ( output
-                                |> Dict.update pos
-                                    (\_ ->
-                                        Card.transform card
-                                            |> (\( maybeCard, fun ) ->
-                                                    if fun neighbors then
-                                                        maybeCard
-
-                                                    else
-                                                        Just card
-                                               )
-                                    )
-                            , newCards
-                                ++ (Card.produces card
-                                        |> (\( newCard, fun ) ->
-                                                if fun neighbors then
-                                                    [ newCard ]
-
-                                                else
-                                                    []
-                                           )
-                                   )
-                            )
-                       )
-            )
-            ( world, [] )
+        Nothing
 
 
 placeCard : ( Int, Int ) -> Game -> Generator ( Game, List Effect )
 placeCard pos game =
-    case game.selected of
-        Just card ->
-            game.world
-                |> Dict.insert pos card
-                |> tick
-                |> (\( world, newCards ) ->
-                        { game
-                            | world = world
-                            , deck = game.deck ++ newCards
-                            , points = game.points + List.length newCards
-                        }
-                            |> (\g ->
-                                    if g |> runEnded then
-                                        ( { g
-                                            | world = Dict.empty
-                                            , selected = Nothing
-                                            , deck = []
-                                            , points = g.points + Config.worldSize * Config.worldSize
-                                          }
-                                        , [ OpenShop ]
-                                        )
-                                            |> Random.constant
+    game.round
+        |> Maybe.andThen
+            (\round ->
+                round.selected
+                    |> Maybe.map
+                        (\card ->
+                            round
+                                |> Round.tick
+                                |> Round.placeCard pos card
+                        )
+            )
+        |> Maybe.map
+            (\round ->
+                if round.turns <= 0 then
+                    ( wonGame { game | round = Just round }
+                    , [ GameWon { score = round.points }
+                            |> OpenOverlay
+                      ]
+                    )
+                        |> Random.constant
 
-                                    else
-                                        g
-                                            |> drawCard
-                                            |> Random.map (\it -> ( it, [] ))
-                               )
-                   )
+                else if round |> Round.roundEnded then
+                    ( { game
+                        | round = Nothing
+                      }
+                    , [ OpenOverlay GameLost ]
+                    )
+                        |> Random.constant
 
-        Nothing ->
-            Random.constant ( game, [] )
+                else
+                    round
+                        |> Round.drawCard
+                        |> Random.map (\it -> ( { game | round = Just it }, [] ))
+            )
+        |> Maybe.withDefault (Random.constant ( game, [] ))
