@@ -94,19 +94,25 @@ viewEmptyCard =
 viewCardBack : Pack -> List (Attribute msg) -> Html msg
 viewCardBack pack attrs =
     let
-        ( backgroundImage, color ) =
+        backgroundImage =
             case pack of
                 Pack.IntroFire ->
-                    ( "assets/fireBack.svg", "#F7B1AB" )
+                    "assets/seedBack.svg"
 
                 Pack.IntroTree ->
-                    ( "assets/leaveBack.svg", "#DCEDB9" )
+                    "assets/leaveBack.svg"
 
                 Pack.IntroVolcano ->
-                    ( "assets/volcanoBack.svg", "#FF4B3E" )
+                    "assets/volcanoBack.svg"
+
+                Pack.IntroButterfly ->
+                    "assets/fireBack.svg"
 
                 _ ->
-                    ( "assets/seedBack.svg", "#DCEDB9" )
+                    "assets/defaultBack.svg"
+
+        color =
+            Pack.color pack
     in
     Layout.none
         |> Game.Card.back

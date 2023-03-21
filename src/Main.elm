@@ -4,6 +4,7 @@ import Browser exposing (Document)
 import Config
 import Dict
 import Game exposing (Effect(..), Game, Overlay(..))
+import Game.Entity
 import Html
 import Html.Attributes
 import Html.Events
@@ -97,19 +98,38 @@ view model =
                         [ Layout.fill
                         , Layout.contentWithSpaceBetween
                         ]
-                , [ [ "Click to swap" |> Layout.text []
-                    , round.backpack
-                        |> Maybe.map (View.viewCard [])
-                        |> Maybe.withDefault
-                            ("Backpack"
-                                |> View.viewEmptyCard
+                , [ Layout.el [ Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px") ] Layout.none
+                  , [ round.backpack
+                        |> Maybe.map
+                            (\card ->
+                                (\attrs -> View.viewCard attrs card)
+                                    |> Game.Entity.new
+                                    |> Game.Entity.rotate (-pi / 8)
+                                    |> Game.Entity.move ( -10, 0 )
                             )
-                        |> Layout.el (Layout.asButton { onPress = Just SwapCards, label = "swap cards" })
+                    , round.selected
+                        |> Maybe.map
+                            (\card ->
+                                (\attrs -> View.viewCard attrs card)
+                                    |> Game.Entity.new
+                            )
+                    , if round.backpack /= Nothing then
+                        (\attrs ->
+                            "Click to swap"
+                                |> Layout.text attrs
+                        )
+                            |> Game.Entity.new
+                            |> Game.Entity.rotate (-pi / 8)
+                            |> Game.Entity.move ( -65, Config.cardHeight - 60 )
+                            |> Just
+
+                      else
+                        Nothing
                     ]
-                        |> Layout.column [ Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px") ]
-                  , round.selected
-                        |> Maybe.map (View.viewCard [])
-                        |> Maybe.withDefault Layout.none
+                        |> List.filterMap identity
+                        |> Game.Entity.pileAbove
+                            (View.viewEmptyCard "Hand")
+                        |> Game.Entity.toHtml [ Html.Events.onClick SwapCards ]
                   , round.deck
                         |> View.deck round.pack
                   ]

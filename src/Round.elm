@@ -60,28 +60,33 @@ drawCard : Round -> Generator Round
 drawCard game =
     game.deck
         |> shuffle
-        |> Random.map
+        |> Random.andThen
             (\list ->
                 case list of
                     head :: tail ->
                         if game.selected == Nothing then
                             { game
-                                | selected = Just head
+                                | selected = game.backpack
+                                , backpack = Just head
                                 , deck = tail
                             }
+                                |> (if game.backpack == Nothing then
+                                        drawCard
 
-                        else if game.backpack == Nothing then
-                            { game | backpack = Just head, deck = tail }
+                                    else
+                                        Random.constant
+                                   )
 
                         else
-                            game
+                            Random.constant game
 
                     [] ->
-                        if game.backpack /= Nothing then
+                        if game.selected == Nothing then
                             { game | backpack = Nothing, selected = game.backpack }
+                                |> Random.constant
 
                         else
-                            game
+                            Random.constant game
             )
 
 

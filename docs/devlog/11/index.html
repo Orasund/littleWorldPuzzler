@@ -5467,7 +5467,25 @@ var $author$project$Main$applyEffect = F2(
 				overlay: $elm$core$Maybe$Just(overlay)
 			});
 	});
-var $elm$core$Basics$neq = _Utils_notEqual;
+var $elm$random$Random$andThen = F2(
+	function (callback, _v0) {
+		var genA = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed) {
+				var _v1 = genA(seed);
+				var result = _v1.a;
+				var newSeed = _v1.b;
+				var _v2 = callback(result);
+				var genB = _v2.a;
+				return genB(newSeed);
+			});
+	});
+var $elm$random$Random$constant = function (value) {
+	return $elm$random$Random$Generator(
+		function (seed) {
+			return _Utils_Tuple2(value, seed);
+		});
+};
 var $elm$core$Basics$abs = function (n) {
 	return (n < 0) ? (-n) : n;
 };
@@ -5546,26 +5564,24 @@ var $author$project$Round$shuffle = function (list) {
 };
 var $author$project$Round$drawCard = function (game) {
 	return A2(
-		$elm$random$Random$map,
+		$elm$random$Random$andThen,
 		function (list) {
 			if (list.b) {
 				var head = list.a;
 				var tail = list.b;
-				return _Utils_eq(game.selected, $elm$core$Maybe$Nothing) ? _Utils_update(
-					game,
-					{
-						deck: tail,
-						selected: $elm$core$Maybe$Just(head)
-					}) : (_Utils_eq(game.backpack, $elm$core$Maybe$Nothing) ? _Utils_update(
-					game,
-					{
-						backpack: $elm$core$Maybe$Just(head),
-						deck: tail
-					}) : game);
+				return _Utils_eq(game.selected, $elm$core$Maybe$Nothing) ? (_Utils_eq(game.backpack, $elm$core$Maybe$Nothing) ? $author$project$Round$drawCard : $elm$random$Random$constant)(
+					_Utils_update(
+						game,
+						{
+							backpack: $elm$core$Maybe$Just(head),
+							deck: tail,
+							selected: game.backpack
+						})) : $elm$random$Random$constant(game);
 			} else {
-				return (!_Utils_eq(game.backpack, $elm$core$Maybe$Nothing)) ? _Utils_update(
-					game,
-					{backpack: $elm$core$Maybe$Nothing, selected: game.backpack}) : game;
+				return _Utils_eq(game.selected, $elm$core$Maybe$Nothing) ? $elm$random$Random$constant(
+					_Utils_update(
+						game,
+						{backpack: $elm$core$Maybe$Nothing, selected: game.backpack})) : $elm$random$Random$constant(game);
 			}
 		},
 		$author$project$Round$shuffle(game.deck));
@@ -5707,12 +5723,6 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $elm$random$Random$constant = function (value) {
-	return $elm$random$Random$Generator(
-		function (seed) {
-			return _Utils_Tuple2(value, seed);
-		});
-};
 var $elm$core$Dict$Black = {$: 'Black'};
 var $elm$core$Dict$RBNode_elm_builtin = F5(
 	function (a, b, c, d, e) {
@@ -5911,6 +5921,7 @@ var $elm$core$Dict$get = F2(
 			}
 		}
 	});
+var $elm$core$Basics$neq = _Utils_notEqual;
 var $author$project$Config$worldSize = 3;
 var $author$project$Round$roundEnded = function (game) {
 	return (_Utils_eq(game.deck, _List_Nil) && (_Utils_eq(game.selected, $elm$core$Maybe$Nothing) && _Utils_eq(game.backpack, $elm$core$Maybe$Nothing))) || ((game.turns <= 0) || A2(
@@ -7233,23 +7244,42 @@ var $Orasund$elm_card_game$Game$Card$backgroundImage = function (src) {
 			A2($elm$html$Html$Attributes$style, 'background-position', 'center')
 		]);
 };
+var $author$project$Pack$color = function (pack) {
+	switch (pack.$) {
+		case 'IntroFire':
+			return '#F7B1AB';
+		case 'IntroTree':
+			return '#DCEDB9';
+		case 'IntroVolcano':
+			return '#FF4B3E';
+		case 'IntroRabbit':
+			return '#D58936';
+		case 'IntroButterfly':
+			return '#FFF94F';
+		case 'IntroBird':
+			return '#976391';
+		default:
+			return '#7B9E89';
+	}
+};
 var $Orasund$elm_layout$Layout$none = $elm$html$Html$text('');
 var $author$project$View$viewCardBack = F2(
 	function (pack, attrs) {
-		var _v0 = function () {
+		var color = $author$project$Pack$color(pack);
+		var backgroundImage = function () {
 			switch (pack.$) {
 				case 'IntroFire':
-					return _Utils_Tuple2('assets/fireBack.svg', '#F7B1AB');
+					return 'assets/seedBack.svg';
 				case 'IntroTree':
-					return _Utils_Tuple2('assets/leaveBack.svg', '#DCEDB9');
+					return 'assets/leaveBack.svg';
 				case 'IntroVolcano':
-					return _Utils_Tuple2('assets/volcanoBack.svg', '#FF4B3E');
+					return 'assets/volcanoBack.svg';
+				case 'IntroButterfly':
+					return 'assets/fireBack.svg';
 				default:
-					return _Utils_Tuple2('assets/seedBack.svg', '#DCEDB9');
+					return 'assets/defaultBack.svg';
 			}
 		}();
-		var backgroundImage = _v0.a;
-		var color = _v0.b;
 		return A2(
 			$Orasund$elm_card_game$Game$Card$back,
 			_Utils_ap(
@@ -7477,6 +7507,19 @@ var $author$project$View$overlay = F2(
 					$Orasund$elm_layout$Layout$centered),
 				content));
 	});
+var $elm$core$Basics$pi = _Basics_pi;
+var $Orasund$elm_card_game$Game$Entity$mapRotation = F2(
+	function (fun, entity) {
+		return _Utils_update(
+			entity,
+			{
+				rotation: fun(entity.rotation)
+			});
+	});
+var $Orasund$elm_card_game$Game$Entity$rotate = function (amount) {
+	return $Orasund$elm_card_game$Game$Entity$mapRotation(
+		$elm$core$Basics$add(amount));
+};
 var $Orasund$elm_layout$Layout$row = function (attrs) {
 	return $elm$html$Html$div(
 		_Utils_ap(
@@ -7807,7 +7850,7 @@ var $author$project$Main$view = function (model) {
 									_List_fromArray(
 										[
 											A2(
-											$Orasund$elm_layout$Layout$column,
+											$Orasund$elm_layout$Layout$el,
 											_List_fromArray(
 												[
 													A2(
@@ -7815,31 +7858,57 @@ var $author$project$Main$view = function (model) {
 													'width',
 													$elm$core$String$fromFloat($author$project$Config$cardWidth) + 'px')
 												]),
+											$Orasund$elm_layout$Layout$none),
+											A2(
+											$Orasund$elm_card_game$Game$Entity$toHtml,
 											_List_fromArray(
 												[
-													A2($Orasund$elm_layout$Layout$text, _List_Nil, 'Click to swap'),
-													A2(
-													$Orasund$elm_layout$Layout$el,
-													$Orasund$elm_layout$Layout$asButton(
-														{
-															label: 'swap cards',
-															onPress: $elm$core$Maybe$Just($author$project$Main$SwapCards)
-														}),
-													A2(
-														$elm$core$Maybe$withDefault,
-														$author$project$View$viewEmptyCard('Backpack'),
-														A2(
+													$elm$html$Html$Events$onClick($author$project$Main$SwapCards)
+												]),
+											A2(
+												$Orasund$elm_card_game$Game$Entity$pileAbove,
+												$author$project$View$viewEmptyCard('Hand'),
+												A2(
+													$elm$core$List$filterMap,
+													$elm$core$Basics$identity,
+													_List_fromArray(
+														[
+															A2(
 															$elm$core$Maybe$map,
-															$author$project$View$viewCard(_List_Nil),
-															round.backpack)))
-												])),
-											A2(
-											$elm$core$Maybe$withDefault,
-											$Orasund$elm_layout$Layout$none,
-											A2(
-												$elm$core$Maybe$map,
-												$author$project$View$viewCard(_List_Nil),
-												round.selected)),
+															function (card) {
+																return A2(
+																	$Orasund$elm_card_game$Game$Entity$move,
+																	_Utils_Tuple2(-10, 0),
+																	A2(
+																		$Orasund$elm_card_game$Game$Entity$rotate,
+																		(-$elm$core$Basics$pi) / 8,
+																		$Orasund$elm_card_game$Game$Entity$new(
+																			function (attrs) {
+																				return A2($author$project$View$viewCard, attrs, card);
+																			})));
+															},
+															round.backpack),
+															A2(
+															$elm$core$Maybe$map,
+															function (card) {
+																return $Orasund$elm_card_game$Game$Entity$new(
+																	function (attrs) {
+																		return A2($author$project$View$viewCard, attrs, card);
+																	});
+															},
+															round.selected),
+															(!_Utils_eq(round.backpack, $elm$core$Maybe$Nothing)) ? $elm$core$Maybe$Just(
+															A2(
+																$Orasund$elm_card_game$Game$Entity$move,
+																_Utils_Tuple2(-65, $author$project$Config$cardHeight - 60),
+																A2(
+																	$Orasund$elm_card_game$Game$Entity$rotate,
+																	(-$elm$core$Basics$pi) / 8,
+																	$Orasund$elm_card_game$Game$Entity$new(
+																		function (attrs) {
+																			return A2($Orasund$elm_layout$Layout$text, attrs, 'Click to swap');
+																		})))) : $elm$core$Maybe$Nothing
+														])))),
 											A2($author$project$View$deck, round.pack, round.deck)
 										]))
 								]);

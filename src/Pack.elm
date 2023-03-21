@@ -67,3 +67,28 @@ surviveTurns pack =
 
         _ ->
             30
+
+
+color : Pack -> String
+color pack =
+    case pack of
+        IntroFire ->
+            "#F7B1AB"
+
+        IntroTree ->
+            "#DCEDB9"
+
+        IntroVolcano ->
+            "#FF4B3E"
+
+        IntroRabbit ->
+            "#D58936"
+
+        IntroButterfly ->
+            "#FFF94F"
+
+        IntroBird ->
+            "#976391"
+
+        IntroIce ->
+            "#7B9E89"
