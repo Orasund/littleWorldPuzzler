@@ -2,17 +2,23 @@ module Round exposing (..)
 
 import Card exposing (Card)
 import Config
+import Deck exposing (Deck)
 import Dict exposing (Dict)
-import Pack exposing (Pack)
 import Random exposing (Generator)
 
 
+type alias CardId =
+    Int
+
+
 type alias Round =
-    { world : Dict ( Int, Int ) Card
-    , selected : Maybe Card
-    , backpack : Maybe Card
-    , deck : List Card
-    , pack : Pack
+    { cards : Dict CardId Card
+    , nextCardId : CardId
+    , world : Dict ( Int, Int ) Card
+    , selected : Maybe CardId
+    , backpack : Maybe CardId
+    , deck : List CardId
+    , pack : Deck
     , points : Int
     , turns : Int
     }
@@ -30,16 +36,56 @@ shuffle list =
             )
 
 
-new : Pack -> Round
+new : Deck -> Round
 new pack =
-    { world = Dict.empty
+    let
+        cards =
+            Deck.cards pack
+                |> List.indexedMap Tuple.pair
+                |> Dict.fromList
+    in
+    { cards = cards
+    , nextCardId = Dict.size cards
+    , world = Dict.empty
     , selected = Nothing
     , backpack = Nothing
-    , deck = Pack.cards pack
-    , turns = Pack.surviveTurns pack
+    , deck = Dict.keys cards
+    , turns = Deck.surviveTurns pack
     , pack = pack
     , points = 0
     }
+
+
+getBackpack : Round -> Maybe ( CardId, Card )
+getBackpack round =
+    round.backpack
+        |> Maybe.andThen
+            (\cardId ->
+                round.cards
+                    |> Dict.get cardId
+                    |> Maybe.map (Tuple.pair cardId)
+            )
+
+
+getSelected : Round -> Maybe ( CardId, Card )
+getSelected round =
+    round.selected
+        |> Maybe.andThen
+            (\cardId ->
+                round.cards
+                    |> Dict.get cardId
+                    |> Maybe.map (Tuple.pair cardId)
+            )
+
+
+getDeck : Round -> List ( CardId, Card )
+getDeck round =
+    round.deck
+        |> List.filterMap
+            (\cardId ->
+                Dict.get cardId round.cards
+                    |> Maybe.map (Tuple.pair cardId)
+            )
 
 
 roundEnded : Round -> Bool
@@ -54,6 +100,17 @@ roundEnded game =
                     )
                 |> List.all (\p -> Dict.get p game.world /= Nothing)
            )
+
+
+addCard : Card -> Round -> Round
+addCard card round =
+    { round
+        | cards =
+            round.cards
+                |> Dict.insert round.nextCardId card
+        , nextCardId = round.nextCardId + 1
+        , deck = round.nextCardId :: round.deck
+    }
 
 
 drawCard : Round -> Generator Round
@@ -145,16 +202,29 @@ tick round =
     round.world
         |> updateWorld
         |> (\( world, newCards ) ->
-                { round
-                    | world = world
-                    , selected = Nothing
-                    , turns = round.turns - 1
-                    , deck = round.deck ++ newCards
-                    , points = round.points + List.length newCards
-                }
+                newCards
+                    |> List.foldl
+                        addCard
+                        { round
+                            | world = world
+                            , points = round.points + List.length newCards
+                        }
            )
 
 
-placeCard : ( Int, Int ) -> Card -> Round -> Round
-placeCard pos card round =
-    { round | world = round.world |> Dict.insert pos card }
+endTurn : Round -> Round
+endTurn round =
+    { round
+        | selected = Nothing
+        , turns = round.turns - 1
+    }
+
+
+placeSelected : ( Int, Int ) -> Round -> Maybe Round
+placeSelected pos round =
+    round
+        |> getSelected
+        |> Maybe.map
+            (\( _, card ) ->
+                { round | world = round.world |> Dict.insert pos card }
+            )

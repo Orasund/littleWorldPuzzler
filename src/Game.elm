@@ -1,11 +1,8 @@
 module Game exposing (..)
 
-import Card exposing (Card)
-import Config
-import Dict exposing (Dict)
-import Pack exposing (Pack)
+import Deck exposing (Deck)
 import Random exposing (Generator)
-import Round exposing (Round, drawCard)
+import Round exposing (Round)
 
 
 type alias Game =
@@ -14,13 +11,9 @@ type alias Game =
     }
 
 
-type Overlay
-    = GameWon { score : Int }
-    | GameLost
-
-
 type Effect
-    = OpenOverlay Overlay
+    = GameWon { score : Int, deck : Deck }
+    | GameLost { turnsLeft : Int }
 
 
 init : Game
@@ -59,16 +52,16 @@ swapCards game =
         |> Maybe.withDefault (Random.constant game)
 
 
-buyPack : Pack -> Game -> Maybe (Generator Game)
+buyPack : Deck -> Game -> Maybe (Generator Game)
 buyPack pack game =
-    if game.totalPoints >= Pack.price pack then
+    if game.totalPoints >= Deck.price pack then
         Round.new pack
             |> Round.drawCard
             |> Random.map
                 (\round ->
                     { game
                         | round = round |> Just
-                        , totalPoints = game.totalPoints - Pack.price pack
+                        , totalPoints = game.totalPoints - Deck.price pack
                     }
                 )
             |> Just
@@ -82,20 +75,19 @@ placeCard pos game =
     game.round
         |> Maybe.andThen
             (\round ->
-                round.selected
-                    |> Maybe.map
-                        (\card ->
-                            round
-                                |> Round.tick
-                                |> Round.placeCard pos card
-                        )
+                round
+                    |> Round.tick
+                    |> Round.placeSelected pos
             )
+        |> Maybe.map Round.endTurn
         |> Maybe.map
             (\round ->
                 if round.turns <= 0 then
                     ( wonGame { game | round = Just round }
-                    , [ GameWon { score = round.points }
-                            |> OpenOverlay
+                    , [ GameWon
+                            { score = round.points
+                            , deck = round.pack
+                            }
                       ]
                     )
                         |> Random.constant
@@ -104,7 +96,7 @@ placeCard pos game =
                     ( { game
                         | round = Nothing
                       }
-                    , [ OpenOverlay GameLost ]
+                    , [ GameLost { turnsLeft = round.turns } ]
                     )
                         |> Random.constant
 

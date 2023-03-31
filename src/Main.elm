@@ -1,23 +1,34 @@
 module Main exposing (..)
 
 import Browser exposing (Document)
+import Card exposing (Card)
 import Config
+import Deck exposing (Deck, DeckId)
 import Dict
-import Game exposing (Effect(..), Game, Overlay(..))
-import Game.Entity
+import Game exposing (Effect(..), Game)
 import Html
 import Html.Attributes
 import Html.Events
 import Layout
-import Pack exposing (Pack)
 import Random exposing (Seed)
-import Round
+import Round exposing (CardId)
+import Set exposing (Set)
 import View
+import View.CardArea
+import View.Tab
+
+
+type Overlay
+    = GameWonOverlay { score : Int }
+    | GameLostOverlay { turnsLeft : Int }
 
 
 type alias Model =
     { game : Game
+    , lastCardPlayed : Maybe CardId
+    , selectedInfoTab : Maybe Card
     , overlay : Maybe Overlay
+    , decksWon : Set DeckId
     , seed : Seed
     }
 
@@ -25,7 +36,8 @@ type alias Model =
 type Msg
     = ClickedAt ( Int, Int )
     | SwapCards
-    | BoughtPack Pack
+    | BoughtPack Deck
+    | SelectTabInfo Card
     | CloseOverlay
     | Restart Seed
 
@@ -33,7 +45,10 @@ type Msg
 init : () -> ( Model, Cmd Msg )
 init () =
     ( { game = Game.init
+      , lastCardPlayed = Nothing
+      , selectedInfoTab = Nothing
       , overlay = Nothing
+      , decksWon = Set.empty
       , seed = Random.initialSeed 42
       }
     , Random.generate Restart Random.independentSeed
@@ -42,7 +57,7 @@ init () =
 
 view : Model -> Document Msg
 view model =
-    { title = "Little World Puzzler"
+    { title = "Little World Puzzler 2"
     , body =
         [ (case model.game.round of
             Just round ->
@@ -81,63 +96,26 @@ view model =
                                         )
                                     |> Layout.row [ Layout.gap 8 ]
                             )
-                        |> Layout.column [ Layout.gap 8 ]
-                  , round.selected
-                        |> Maybe.map
-                            (View.description
-                                [ Html.Attributes.style "bottom" "-100px"
-                                , Html.Attributes.style "left" (String.fromFloat (Config.cardWidth * 1.5 + 5) ++ "px")
-                                , Html.Attributes.style "width" "200px"
-                                , Html.Attributes.style "border" "1px dashed rgba(0,0,0,0.2)"
-                                , Html.Attributes.style "padding" "8px"
-                                ]
-                            )
-                        |> Maybe.withDefault Layout.none
+                        |> Layout.column [ Layout.gap 8, Layout.alignAtCenter ]
+                  , View.Tab.toHtml
+                        { round = round
+                        , onSelect = SelectTabInfo
+                        }
+                        model.selectedInfoTab
                   ]
                     |> Layout.column
                         [ Layout.fill
                         , Layout.contentWithSpaceBetween
                         ]
-                , [ Layout.el [ Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px") ] Layout.none
-                  , [ round.backpack
-                        |> Maybe.map
-                            (\card ->
-                                (\attrs -> View.viewCard attrs card)
-                                    |> Game.Entity.new
-                                    |> Game.Entity.rotate (-pi / 8)
-                                    |> Game.Entity.move ( -10, 0 )
-                            )
-                    , round.selected
-                        |> Maybe.map
-                            (\card ->
-                                (\attrs -> View.viewCard attrs card)
-                                    |> Game.Entity.new
-                            )
-                    , if round.backpack /= Nothing then
-                        (\attrs ->
-                            "Click to swap"
-                                |> Layout.text attrs
+                , model.game.round
+                    |> Maybe.map
+                        (View.CardArea.toHtml
+                            { onSwapCards = SwapCards
+                            , lastSelectedCard = model.lastCardPlayed
+                            }
+                            []
                         )
-                            |> Game.Entity.new
-                            |> Game.Entity.rotate (-pi / 8)
-                            |> Game.Entity.move ( -65, Config.cardHeight - 60 )
-                            |> Just
-
-                      else
-                        Nothing
-                    ]
-                        |> List.filterMap identity
-                        |> Game.Entity.pileAbove
-                            (View.viewEmptyCard "Hand")
-                        |> Game.Entity.toHtml [ Html.Events.onClick SwapCards ]
-                  , round.deck
-                        |> View.deck round.pack
-                  ]
-                    |> Layout.row
-                        [ Layout.contentWithSpaceBetween
-                        , Html.Attributes.style "width" "100%"
-                        , Layout.alignAtEnd
-                        ]
+                    |> Maybe.withDefault Layout.none
                 ]
 
             Nothing ->
@@ -151,17 +129,23 @@ view model =
                         , Html.Attributes.style "width" "100%"
                         ]
                 , [ "Choose a Pack" |> Layout.text []
-                  , Pack.asList
+                  , Deck.asList
                         |> List.map
                             (\pack ->
-                                [ "Play for "
-                                    ++ String.fromInt (Pack.price pack)
+                                [ (if model.decksWon |> Set.member (Deck.toString pack) then
+                                    "✅"
+
+                                   else
+                                    ""
+                                  )
+                                    ++ "Play for "
+                                    ++ String.fromInt (Deck.price pack)
                                     |> Layout.text []
                                 , pack |> View.viewPack
                                 ]
                                     |> Layout.column
                                         (Layout.asButton
-                                            { label = "Play for " ++ String.fromInt (Pack.price pack)
+                                            { label = "Play for " ++ String.fromInt (Deck.price pack)
                                             , onPress = Just (BoughtPack pack)
                                             }
                                             ++ [ Layout.alignAtCenter
@@ -192,7 +176,7 @@ view model =
                     :: Layout.centered
                 )
                 (case model.overlay of
-                    Just (Game.GameWon args) ->
+                    Just (GameWonOverlay args) ->
                         [ \attrs ->
                             [ "🎉" |> Layout.text [ Html.Attributes.style "font-size" "40px" ]
                             , "You win"
@@ -200,27 +184,37 @@ view model =
                                     [ Html.Attributes.style "font-size" "20px"
                                     ]
                             , "Score" |> Layout.text []
-                            , String.fromInt args.score |> Layout.text []
+                            , String.fromInt args.score |> Layout.text [ Html.Attributes.style "font-size" "120px" ]
                             ]
                                 |> View.overlay
-                                    ([ Html.Events.onClick CloseOverlay
-                                     ]
-                                        ++ attrs
+                                    (Html.Events.onClick CloseOverlay
+                                        :: attrs
                                     )
                         ]
 
-                    Just Game.GameLost ->
+                    Just (GameLostOverlay args) ->
                         [ \attrs ->
                             [ "☠️" |> Layout.text [ Html.Attributes.style "font-size" "40px" ]
-                            , "You Lost "
+                            , "Game Over"
                                 |> Layout.text
                                     [ Html.Attributes.style "font-size" "20px"
                                     ]
+                            , "You just needed to survive " |> Layout.text []
+                            , args.turnsLeft
+                                |> String.fromInt
+                                |> Layout.text [ Html.Attributes.style "font-size" "120px" ]
+                            , " more "
+                                ++ (if args.turnsLeft == 1 then
+                                        "turn"
+
+                                    else
+                                        "turns"
+                                   )
+                                |> Layout.text []
                             ]
                                 |> View.overlay
-                                    ([ Html.Events.onClick CloseOverlay
-                                     ]
-                                        ++ attrs
+                                    (Html.Events.onClick CloseOverlay
+                                        :: attrs
                                     )
                         ]
 
@@ -251,8 +245,24 @@ button:active {
 applyEffect : Effect -> Model -> Model
 applyEffect effect model =
     case effect of
-        OpenOverlay overlay ->
-            { model | overlay = Just overlay }
+        GameWon args ->
+            { model
+                | overlay =
+                    { score = args.score }
+                        |> GameWonOverlay
+                        |> Just
+                , decksWon =
+                    model.decksWon
+                        |> Set.insert (Deck.toString args.deck)
+            }
+
+        GameLost args ->
+            { model
+                | overlay =
+                    { turnsLeft = args.turnsLeft }
+                        |> GameLostOverlay
+                        |> Just
+            }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -267,6 +277,13 @@ update msg model =
                                 { model
                                     | game = game
                                     , seed = seed
+                                    , lastCardPlayed =
+                                        model.game.round
+                                            |> Maybe.andThen .selected
+                                    , selectedInfoTab =
+                                        model.game.round
+                                            |> Maybe.andThen Round.getSelected
+                                            |> Maybe.map Tuple.second
                                 }
                    )
             , Cmd.none
@@ -280,6 +297,11 @@ update msg model =
                         )
                    )
 
+        SelectTabInfo card ->
+            ( { model | selectedInfoTab = Just card }
+            , Cmd.none
+            )
+
         BoughtPack pack ->
             model.game
                 |> Game.buyPack pack
@@ -289,6 +311,10 @@ update msg model =
                         ( { model
                             | game = game
                             , seed = seed
+                            , selectedInfoTab =
+                                game.round
+                                    |> Maybe.andThen Round.getSelected
+                                    |> Maybe.map Tuple.second
                           }
                         , Cmd.none
                         )

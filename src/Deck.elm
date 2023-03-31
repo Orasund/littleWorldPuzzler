@@ -1,9 +1,13 @@
-module Pack exposing (..)
+module Deck exposing (..)
 
 import Card exposing (Card)
 
 
-type Pack
+type alias DeckId =
+    String
+
+
+type Deck
     = IntroFire
     | IntroTree
     | IntroRabbit
@@ -13,7 +17,7 @@ type Pack
     | IntroIce
 
 
-asList : List Pack
+asList : List Deck
 asList =
     [ IntroFire
     , IntroTree
@@ -26,7 +30,37 @@ asList =
         |> List.sortBy price
 
 
-cards : Pack -> List Card
+toString : Deck -> String
+toString pack =
+    case pack of
+        IntroFire ->
+            "IntroFire"
+
+        IntroTree ->
+            "IntroTree"
+
+        IntroRabbit ->
+            "IntroRabbit"
+
+        IntroVolcano ->
+            "IntroVolcano"
+
+        IntroButterfly ->
+            "IntroButterfly"
+
+        IntroBird ->
+            "IntroBird"
+
+        IntroIce ->
+            "IntroIce"
+
+
+asId : Int -> Deck -> String
+asId cardId pack =
+    "card_" ++ toString pack ++ "_" ++ String.fromInt cardId
+
+
+cards : Deck -> List Card
 cards pack =
     case pack of
         IntroFire ->
@@ -51,7 +85,7 @@ cards pack =
             [ Card.Snow, Card.Snow, Card.Snow, Card.Water, Card.Volcano ]
 
 
-price : Pack -> Int
+price : Deck -> Int
 price pack =
     pack
         |> cards
@@ -59,7 +93,7 @@ price pack =
         |> List.sum
 
 
-surviveTurns : Pack -> Int
+surviveTurns : Deck -> Int
 surviveTurns pack =
     case pack of
         IntroFire ->
@@ -69,7 +103,7 @@ surviveTurns pack =
             30
 
 
-color : Pack -> String
+color : Deck -> String
 color pack =
     case pack of
         IntroFire ->

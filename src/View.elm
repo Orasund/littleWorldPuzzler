@@ -2,12 +2,14 @@ module View exposing (..)
 
 import Card exposing (Card, NeighborExpression)
 import Config
+import Deck exposing (Deck)
+import Game.Area
 import Game.Card
-import Game.Entity
+import Game.Entity exposing (Entity)
 import Html exposing (Attribute, Html)
 import Html.Attributes
 import Layout
-import Pack exposing (Pack)
+import Round exposing (CardId)
 
 
 button : Maybe msg -> String -> Html msg
@@ -37,24 +39,25 @@ viewCard attrs card =
             )
     ]
         |> Game.Card.default
-            (attrs
-                ++ [ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
-                   , Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px")
-                   ]
+            ([ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
+             , Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px")
+             , Html.Attributes.style "opacity" "1"
+             ]
+                ++ attrs
             )
 
 
-viewPack : Pack -> Html msg
+viewPack : Deck -> Html msg
 viewPack pack =
     [ (\attrs ->
         viewCardBack pack
             (attrs ++ [ Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px") ])
       )
         |> Game.Entity.new
-        |> List.repeat (List.length (Pack.cards pack))
+        |> List.repeat (List.length (Deck.cards pack))
         |> List.indexedMap
             (\i ->
-                Game.Entity.move ( 0, toFloat (List.length (Pack.cards pack) * 3) - toFloat i * 3 )
+                Game.Entity.move ( 0, toFloat (List.length (Deck.cards pack) * 3) - toFloat i * 3 )
             )
         |> Game.Entity.pileAbove
             (Layout.el
@@ -63,7 +66,7 @@ viewPack pack =
                     (String.fromFloat
                         (Config.cardHeight
                             + toFloat
-                                (List.length (Pack.cards pack)
+                                (List.length (Deck.cards pack)
                                     * 3
                                 )
                         )
@@ -73,7 +76,7 @@ viewPack pack =
                 Layout.none
             )
         |> Game.Entity.toHtml []
-    , Pack.cards pack
+    , Deck.cards pack
         |> List.map Card.emoji
         |> String.concat
         |> Layout.text
@@ -83,36 +86,42 @@ viewPack pack =
         |> Layout.column [ Layout.gap 8 ]
 
 
-viewEmptyCard : String -> Html msg
-viewEmptyCard =
+viewEmptyCard : List (Attribute msg) -> String -> Html msg
+viewEmptyCard attrs title =
     Game.Card.empty
-        [ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
-        , Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px")
-        ]
+        ([ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
+         , Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px")
+         ]
+            ++ attrs
+        )
+        title
 
 
-viewCardBack : Pack -> List (Attribute msg) -> Html msg
+viewCardBack : Deck -> List (Attribute msg) -> Html msg
 viewCardBack pack attrs =
     let
         backgroundImage =
             case pack of
-                Pack.IntroFire ->
+                Deck.IntroFire ->
                     "assets/seedBack.svg"
 
-                Pack.IntroTree ->
+                Deck.IntroTree ->
                     "assets/leaveBack.svg"
 
-                Pack.IntroVolcano ->
+                Deck.IntroVolcano ->
                     "assets/volcanoBack.svg"
 
-                Pack.IntroButterfly ->
+                Deck.IntroButterfly ->
                     "assets/fireBack.svg"
+
+                Deck.IntroIce ->
+                    "assets/iceBack.svg"
 
                 _ ->
                     "assets/defaultBack.svg"
 
         color =
-            Pack.color pack
+            Deck.color pack
     in
     Layout.none
         |> Game.Card.back
@@ -120,6 +129,7 @@ viewCardBack pack attrs =
                 ++ [ Html.Attributes.style "height" (String.fromFloat Config.cardHeight ++ "px")
                    , Html.Attributes.style "background-size" "50%"
                    , Html.Attributes.style "background-color" color
+                   , Html.Attributes.style "opacity" "1"
                    ]
                 ++ attrs
             )
@@ -204,7 +214,14 @@ cell args maybeCard =
     maybeCard
         |> Maybe.map Card.emoji
         |> Maybe.withDefault ""
-        |> Html.text
+        |> Layout.text
+            [ Html.Attributes.style "transition" "transform 0.5s"
+            , if maybeCard == Nothing then
+                Html.Attributes.style "transform" "scale(0)"
+
+              else
+                Html.Attributes.style "transform" "scale(1)"
+            ]
         |> Layout.button
             (Layout.centered
                 ++ [ Html.Attributes.style "width" "80px"
@@ -237,13 +254,14 @@ cell args maybeCard =
                                 Card.emoji to
                                     |> Layout.text
                                         (Layout.centered
-                                            ++ [ Html.Attributes.style "border-radius" "100%"
+                                            ++ [ Html.Attributes.style "border-radius" "8px"
                                                , Html.Attributes.style "right" "-8px"
                                                , Html.Attributes.style "top" "-8px"
-                                               , Html.Attributes.style "height" "24px"
-                                               , Html.Attributes.style "aspect-ratio" "1"
+                                               , Html.Attributes.style "height" "30px"
+                                               , Html.Attributes.style "width" "22px"
                                                , Html.Attributes.style "background-color" "white"
                                                , Html.Attributes.style "border" "1px solid rgba(0,0,0,0.2)"
+                                               , Html.Attributes.style "font-size" "14px"
                                                ]
                                             ++ attrs
                                         )
@@ -253,6 +271,28 @@ cell args maybeCard =
                         else
                             Nothing
                     )
+             , if
+                maybeCard
+                    |> Maybe.map Card.produces
+                    |> Maybe.map Tuple.second
+                    |> Maybe.map (Card.isValidNeighborhoods args.neighbors)
+                    |> Maybe.withDefault False
+               then
+                (\attrs ->
+                    "➕"
+                        |> Layout.text
+                            (Layout.centered
+                                ++ [ Html.Attributes.style "right" "10px"
+                                   , Html.Attributes.style "top" "0px"
+                                   , Html.Attributes.style "font-size" "10px"
+                                   ]
+                                ++ attrs
+                            )
+                )
+                    |> Just
+
+               else
+                Nothing
              , maybeCard
                 |> Maybe.map Card.transform
                 |> Maybe.andThen
@@ -265,8 +305,8 @@ cell args maybeCard =
                                     |> Layout.text
                                         (Layout.centered
                                             ++ [ Html.Attributes.style "border-radius" "8px"
-                                               , Html.Attributes.style "left" "0px"
-                                               , Html.Attributes.style "buttom" "-8px"
+                                               , Html.Attributes.style "left" "26px"
+                                               , Html.Attributes.style "bottom" "0"
                                                , Html.Attributes.style "height" "24px"
                                                , Html.Attributes.style "aspect-ratio" "1"
                                                , Html.Attributes.style "background-color" "white"
@@ -285,32 +325,37 @@ cell args maybeCard =
             )
 
 
-deck : Pack -> List Card -> Html msg
+deck : Deck -> List ( CardId, Card ) -> List (Entity ( String, List (Attribute msg) -> Html msg ))
 deck pack cards =
-    viewCardBack pack
-        |> Game.Entity.new
-        |> List.repeat (List.length cards)
+    cards
+        |> List.map
+            (\( cardId, card ) ->
+                ( Deck.asId cardId pack, viewCardBack pack )
+                    |> Game.Entity.new
+            )
         |> List.indexedMap
             (\i ->
                 Game.Entity.move ( 0, -3 * toFloat i )
             )
-        |> Game.Entity.pileAbove
-            ("Deck"
-                |> viewEmptyCard
-                |> Layout.withStack []
-                    [ \attrs ->
-                        cards
-                            |> List.map Card.emoji
-                            |> String.concat
-                            |> Layout.text
-                                (attrs
-                                    ++ [ Html.Attributes.style "right" (String.fromFloat Config.cardWidth ++ "px")
-                                       , Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px")
-                                       ]
-                                )
-                    ]
+        |> Game.Area.pileAbove ( 0, 0 )
+            ( "deck_" ++ Deck.toString pack
+            , \attrs ->
+                "Deck"
+                    |> viewEmptyCard []
+                    |> Layout.withStack attrs
+                        [ \a ->
+                            cards
+                                |> List.map Tuple.second
+                                |> List.map Card.emoji
+                                |> String.concat
+                                |> Layout.text
+                                    (a
+                                        ++ [ Html.Attributes.style "right" (String.fromFloat Config.cardWidth ++ "px")
+                                           , Html.Attributes.style "width" (String.fromFloat Config.cardWidth ++ "px")
+                                           ]
+                                    )
+                        ]
             )
-        |> Game.Entity.toHtml []
 
 
 overlay : List (Attribute msg) -> List (Html msg) -> Html msg
@@ -320,6 +365,8 @@ overlay attrs content =
             ([ Html.Attributes.style "background-color" "white"
              , Html.Attributes.style "border" "solid 1px rgba(0,0,0,0.2)"
              , Html.Attributes.style "padding" "32px"
+             , Html.Attributes.style "width" "300px"
+             , Html.Attributes.style "height" "300px"
              , Html.Attributes.style "border-radius" "8px"
              , Layout.gap 16
              ]
