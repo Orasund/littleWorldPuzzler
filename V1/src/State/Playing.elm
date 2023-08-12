@@ -35,6 +35,7 @@ type Mode
 type alias State =
     { game : Game
     , selected : Maybe Selected
+    , positionSelected : Maybe ( Int, Int )
     , history : UndoList Game
     , mode : Mode
     , collection : Set String
@@ -51,6 +52,7 @@ type alias Model =
 type Msg
     = Selected Selected
     | PositionSelected ( Int, Int )
+    | PlaceCard ( Int, Int ) Selected
     | CardPlaced
     | Undo
     | Redo
@@ -79,6 +81,7 @@ init : TransitionData -> ( Model, Cmd Msg )
 init { game, seed, mode } =
     ( ( { game = game
         , selected = Nothing
+        , positionSelected = Nothing
         , history = UndoList.fresh game
         , mode = mode
         , collection = Set.empty
@@ -109,6 +112,7 @@ play ( { game, history } as state, seed ) =
         ( ( { state
                 | game = game
                 , selected = Nothing
+                , positionSelected = Nothing
                 , history = history |> UndoList.new game
             }
           , seed
@@ -188,6 +192,21 @@ pickUp cellType position ( { game, history } as state, seed ) =
         )
 
 
+placeCard : ( Int, Int ) -> Selected -> Model -> Action
+placeCard position selected (( { game }, _ ) as model) =
+    case selected of
+        First ->
+            playFirst position model
+
+        Second ->
+            case game.deck |> Deck.second of
+                Just second ->
+                    playSecond position second model
+
+                Nothing ->
+                    playFirst position model
+
+
 update : Msg -> Model -> Action
 update msg (( { game, history, selected, mode, viewCollection, collection } as state, seed ) as model) =
     let
@@ -209,25 +228,20 @@ update msg (( { game, history, selected, mode, viewCollection, collection } as s
             case game.board |> Grid.get position of
                 Ok Nothing ->
                     case selected of
-                        Just First ->
-                            playFirst position model
-
-                        Just Second ->
-                            case game.deck |> Deck.second of
-                                Just second ->
-                                    playSecond position second model
-
-                                Nothing ->
-                                    playFirst position model
+                        Just s ->
+                            placeCard position s model
 
                         Nothing ->
-                            defaultCase
+                            Action.updating ( ( { state | positionSelected = Just position }, seed ), Cmd.none )
 
                 Ok (Just cell) ->
                     pickUp cell position model
 
                 Err _ ->
                     defaultCase
+
+        PlaceCard position selection ->
+            placeCard position selection ( { state | selected = Just selection }, seed )
 
         CardPlaced ->
             let
@@ -327,34 +341,38 @@ view :
     -> (Msg -> msg)
     -> Model
     -> ( Maybe { isWon : Bool, shade : List (Element msg) }, List (Element msg) )
-view scale restartMsg msgMapper ( { game, selected, mode, viewCollection, collection, viewedCard }, _ ) =
+view scale restartMsg msgMapper ( model, _ ) =
     ( Nothing
-    , [ if mode == Challenge then
+    , [ if model.mode == Challenge then
             HeaderView.viewWithUndo
                 { restartMsg = restartMsg
                 , previousMsg = msgMapper Undo
                 , nextMsg = msgMapper Redo
                 }
-                game.score
+                model.game.score
 
         else
             HeaderView.view scale
                 restartMsg
-                game.score
-      , if viewCollection then
-            CollectionView.view scale (msgMapper << CardSelected) collection viewedCard
+                model.game.score
+      , if model.viewCollection then
+            CollectionView.view scale
+                (msgMapper << CardSelected)
+                model.collection
+                model.viewedCard
 
         else
             GameView.view
                 { scale = scale
-                , selected = selected
-                , sort = mode /= Challenge
-                }
-                { positionSelectedMsg = msgMapper << PositionSelected
+                , selected = model.selected
+                , sort = model.mode /= Challenge
+                , positionSelected = model.positionSelected
+                , positionSelectedMsg = msgMapper << PositionSelected
                 , selectedMsg = msgMapper << Selected
+                , placeCard = \a b -> PlaceCard a b |> msgMapper
                 }
-                game
-      , (if viewCollection then
+                model.game
+      , (if model.viewCollection then
             PageSelectorView.viewCollection
 
          else

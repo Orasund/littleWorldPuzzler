@@ -1,7 +1,8 @@
-module  Data.CellType exposing
+module Data.CellType exposing
     ( CellType(..)
     , json
     , list
+    , name
     , toInt
     , toString
     )
@@ -21,12 +22,12 @@ type CellType
     | Ice
     | Snow
     | Evergreen
-    | Bug
+    | Weed
 
 
 list : List CellType
 list =
-    [ Snow, Desert, Fire, Glacier, Volcano, Stone, Evergreen, Ice, Fog, Water, Wood, Bug ]
+    [ Snow, Desert, Fire, Glacier, Volcano, Stone, Evergreen, Ice, Fog, Water, Wood, Weed ]
 
 
 fromInt : Int -> CellType
@@ -66,7 +67,7 @@ fromInt n =
             Evergreen
 
         12 ->
-            Bug
+            Weed
 
         _ ->
             Wood
@@ -108,7 +109,7 @@ toInt cellType =
         Evergreen ->
             11
 
-        Bug ->
+        Weed ->
             12
 
 
@@ -149,8 +150,48 @@ toString cellType =
             Evergreen ->
                 '🌲'
 
-            Bug ->
+            Weed ->
                 '🌿'
+
+
+name : CellType -> String
+name cellType =
+    case cellType of
+        Wood ->
+            "Wood"
+
+        Water ->
+            "Water"
+
+        Fire ->
+            "Fire"
+
+        Stone ->
+            "Stone"
+
+        Volcano ->
+            "Volcano"
+
+        Fog ->
+            "Fog"
+
+        Desert ->
+            "Desert"
+
+        Glacier ->
+            "Glacier"
+
+        Ice ->
+            "Ice"
+
+        Snow ->
+            "Snow"
+
+        Evergreen ->
+            "Evergreen Tree"
+
+        Weed ->
+            "Weed"
 
 
 

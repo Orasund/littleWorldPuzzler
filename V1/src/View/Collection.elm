@@ -1,13 +1,13 @@
-module  View.Collection exposing (view)
+module View.Collection exposing (view)
 
+import Data.CellType as CellType exposing (CellType(..))
 import Element exposing (Attribute, Element)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
-import  Data.CellType as CellType exposing (CellType(..))
-import  View.Button as Button
-import  View.Deck as DeckView
 import Set exposing (Set)
+import View.Button as Button
+import View.Deck as DeckView
 
 
 attributes : Float -> List (Attribute msg)
@@ -77,7 +77,7 @@ tree scale msgMapper set =
             , Element.column (attributes scale) <|
                 [ Wood |> viewCell scale msgMapper set
                 , Element.row (attributes scale) <|
-                    ([ Evergreen, Bug ] |> List.map (viewCell scale msgMapper set))
+                    ([ Evergreen, Weed ] |> List.map (viewCell scale msgMapper set))
                 ]
             , Element.column (attributes scale) <|
                 [ Fire |> viewCell scale msgMapper set

@@ -1,8 +1,8 @@
-module  Automata.Rule exposing (rules)
+module Automata.Rule exposing (rules)
 
+import Automata.Neighborhood as Neighborhood
 import CellAutomata exposing (Rule)
-import  Automata.Neighborhood as Neighborhood
-import  Data.CellType exposing (CellType(..))
+import Data.CellType exposing (CellType(..))
 
 
 type RuleType
@@ -53,7 +53,7 @@ rules cellType =
             , CombinesInto Evergreen
 
             --, rule { from = Just Wood, to = Just Evergreen } [ ( 1, Just Ice ) ]
-            , Surrounds Bug --new
+            , Surrounds Weed --new
             ]
 
         Water ->
@@ -119,9 +119,9 @@ rules cellType =
             [ KilledBy Fire
             ]
 
-        Bug ->
+        Weed ->
             [ TurnsInto Fire --new
-            , Spawns Bug --new
+            , Spawns Weed --new
             ]
     )
         |> List.map (intoRule >> (\f -> f cellType))
