@@ -1,6 +1,7 @@
-module  State.Finished exposing (Model, Msg(..), TransitionData, init, update, view)
+module State.Finished exposing (Model, Msg, TransitionData, init, view)
 
-import Action
+import Data.Entry exposing (Entry)
+import Data.Game exposing (EndCondition(..), Game)
 import Element exposing (Element)
 import Element.Font as Font
 import Element.Input as Input
@@ -8,12 +9,9 @@ import Firestore exposing (Error(..))
 import Framework.Button as Button
 import Framework.Heading as Heading
 import Http
-import  Data.Entry as Entry exposing (Entry)
-import  Data.Game exposing (EndCondition(..), Game)
-import  Request as Request exposing (Response(..))
-import  View.Game as GameView
-import  View.Header as HeaderView
 import UndoList exposing (UndoList)
+import View.Game as GameView
+import View.Header as HeaderView
 
 
 type alias TransitionData =
@@ -21,6 +19,10 @@ type alias TransitionData =
     , history : UndoList Game
     , challenge : Bool
     }
+
+
+type alias Msg =
+    ()
 
 
 
@@ -68,85 +70,6 @@ type alias LeaderboardState =
 type Model
     = End EndState
     | Highscore LeaderboardState
-
-
-type Msg
-    = RequestedHighscore Response
-
-
-type alias Action =
-    Action.Action Model Msg (UndoList Game) Never
-
-
-
-----------------------
--- Update
-----------------------
-
-
-update : Msg -> Model -> Action
-update msg model =
-    let
-        defaultCase : Action
-        defaultCase =
-            Action.updating
-                ( model, Cmd.none )
-    in
-    case msg of
-        RequestedHighscore response ->
-            case model of
-                End ({ history, game, challenge } as endState) ->
-                    case response of
-                        GotHighscore entry ->
-                            Action.updating
-                                ( Highscore
-                                    { game = game
-                                    , highscore = entry
-                                    , newHighscore = False
-                                    , error = Nothing
-                                    }
-                                , Cmd.none
-                                )
-
-                        AchievedNewHighscore ->
-                            let
-                                newEntry : Entry
-                                newEntry =
-                                    Entry.new history
-                            in
-                            Action.updating
-                                ( Highscore
-                                    { game = game
-                                    , highscore = newEntry
-                                    , newHighscore = True
-                                    , error = Nothing
-                                    }
-                                , Cmd.none
-                                  {--Request.setHighscore { entry = newEntry, challenge = challenge }
-                                    |> Cmd.map RequestedHighscore--}
-                                )
-
-                        GotError error ->
-                            Action.updating
-                                ( End
-                                    { endState | error = Just error }
-                                , Cmd.none
-                                )
-
-                        Done ->
-                            defaultCase
-
-                Highscore highscoreState ->
-                    case response of
-                        GotError error ->
-                            Action.updating
-                                ( Highscore
-                                    { highscoreState | error = Just error }
-                                , Cmd.none
-                                )
-
-                        _ ->
-                            defaultCase
 
 
 

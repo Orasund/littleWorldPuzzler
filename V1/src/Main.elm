@@ -1,4 +1,4 @@
-module  Main exposing (main)
+module Main exposing (main)
 
 import Action
 import Browser
@@ -10,14 +10,14 @@ import Element.Font as Font
 import Framework
 import Html
 import Html.Attributes as Attributes
-import  State.Finished as FinishedState
-import  State.Playing as PlayingState
-import  State.Prepairing as PreparingState
-import  State.Ready as ReadyState
-import  State.Replaying as ReplayingState
-import  View.Shade as Shade
 import Random
+import State.Finished as FinishedState
+import State.Playing as PlayingState
+import State.Prepairing as PreparingState
+import State.Ready as ReadyState
+import State.Replaying as ReplayingState
 import Task
+import View.Shade as Shade
 
 
 height : Float
@@ -164,21 +164,8 @@ update msg model =
                 |> Action.withExit (init ())
                 |> Action.apply
 
-        ( FinishedSpecific finishedMsg, Finished ( finishedModel, config ) ) ->
-            FinishedState.update finishedMsg finishedModel
-                |> Action.config
-                |> Action.withUpdate
-                    (\m -> Finished ( m, config ))
-                    FinishedSpecific
-                |> Action.withTransition
-                    (\m ->
-                        ( ( m, config )
-                        , Cmd.none
-                        )
-                    )
-                    Replaying
-                    never
-                |> Action.apply
+        ( FinishedSpecific _, Finished _ ) ->
+            ( model, Cmd.none )
 
         ( ReplayingSpecific replayingMsg, Replaying ( replayingModel, config ) ) ->
             ReplayingState.update replayingMsg replayingModel

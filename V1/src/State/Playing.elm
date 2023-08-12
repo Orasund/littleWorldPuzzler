@@ -1,25 +1,23 @@
-module  State.Playing exposing (Mode(..), Model, Msg, TransitionData, init, update, view)
+module State.Playing exposing (Mode(..), Model, Msg, TransitionData, init, update, view)
 
 import Action
+import Data.Board as Board
+import Data.CellType exposing (CellType(..))
+import Data.Deck as Deck exposing (Selected(..))
+import Data.Game as Game exposing (EndCondition(..), Game)
 import Element exposing (Element)
 import Grid.Bordered as Grid
 import Http exposing (Error(..))
-import  Data.Board as Board
-import  Data.CellType exposing (CellType(..))
-import  Data.Deck as Deck exposing (Selected(..))
-import  Data.Game as Game exposing (EndCondition(..), Game)
-import  Request exposing (Response(..))
-import  State.Finished as FinishedState
-import  View.Collection as CollectionView
-import  View.Game as GameView
-import  View.Header as HeaderView
-import  View.PageSelector as PageSelectorView
-import Position
 import Process
 import Random exposing (Seed)
 import Set exposing (Set)
+import State.Finished as FinishedState
 import Task
 import UndoList exposing (UndoList)
+import View.Collection as CollectionView
+import View.Game as GameView
+import View.Header as HeaderView
+import View.PageSelector as PageSelectorView
 
 
 
