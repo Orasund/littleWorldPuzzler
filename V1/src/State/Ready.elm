@@ -4,15 +4,12 @@ import Action
 import Data.Game as Game exposing (Game)
 import Element exposing (Element)
 import Element.Font as Font
-import Element.Input as Input
 import Framework
-import Framework.Button as Button
-import Framework.Card as Card
 import Framework.Grid as Grid
-import Framework.Heading as Heading
 import Random exposing (Generator, Seed)
-import State.Playing as PlayingState exposing (Mode(..))
+import State.Playing as PlayingState
 import Time exposing (Month(..))
+import View.Button
 import View.Game as GameView
 import View.Header as HeaderView
 import View.Shade
@@ -69,7 +66,6 @@ update msg ( game, seed ) =
             Action.transitioning
                 { game = game
                 , seed = seed
-                , mode = Normal
                 }
 
 
@@ -79,78 +75,48 @@ update msg ( game, seed ) =
 ----------------------
 
 
-viewMode : msg -> { title : String, desc : String } -> Element msg
-viewMode msg { title, desc } =
-    Input.button
-        (Button.simple
-            ++ Card.large
-            ++ [ Font.family
-                    [ Font.sansSerif ]
-               , Element.centerX
-               , Element.centerY
-               , Font.color <| Element.rgb255 0 0 0
-               ]
-        )
-    <|
-        { onPress = Just msg
-        , label =
-            Element.column
-                Grid.spaceEvenly
-            <|
-                [ Element.paragraph
-                    (Heading.h2 ++ [ Element.centerX ])
-                  <|
-                    List.singleton <|
-                        Element.text title
-                , Element.paragraph [] <|
-                    List.singleton <|
-                        Element.text desc
-                ]
-        }
-
-
 view : Float -> msg -> (Msg -> msg) -> Model -> Element msg
 view scale restartMsg msgMapper ( game, _ ) =
-    [ HeaderView.view scale restartMsg game.score
+    [ HeaderView.view restartMsg game.score
     , GameView.viewHome scale game
     ]
         |> Element.column
             (Framework.container
-                ++ [ [ Element.wrappedRow (Grid.simple ++ [ Element.height <| Element.fill ])
-                        [ Element.row
+                ++ [ [ [ Element.el
+                            [ Font.size <| floor <| scale * 120
+                            , Font.family
+                                [ Font.typeface "Noto Emoji" ]
+                            ]
+                         <|
+                            Element.text "🌍"
+                       , Element.column
+                            [ Font.size <| floor <| scale * 60
+                            , Element.centerX
+                            , Font.color <| Element.rgb255 255 255 255
+                            , Font.center
+                            ]
+                         <|
+                            [ Element.text "Little"
+                            , Element.text "World"
+                            , Element.text "Puzzler"
+                            ]
+                       ]
+                        |> Element.row
                             (Grid.simple
                                 ++ [ Element.width <| Element.shrink
                                    , Element.centerY
+                                   , Element.centerX
                                    ]
                             )
-                            [ Element.el
-                                [ Font.size <| floor <| scale * 150
-                                , Font.family
-                                    [ Font.typeface "Noto Emoji" ]
-                                ]
-                              <|
-                                Element.text "🌍"
-                            , Element.column
-                                [ Font.size <| floor <| scale * 80
-                                , Element.centerX
-                                , Font.color <| Element.rgb255 255 255 255
-                                , Font.center
-                                ]
-                              <|
-                                [ Element.text "Little"
-                                , Element.text "World"
-                                , Element.text "Puzzler"
-                                ]
-                            ]
-                        , Element.column (Grid.simple ++ [ Element.centerY ]) <|
-                            [ viewMode
-                                (msgMapper <| NormalModeSelected)
-                                { title = "Play"
-                                , desc = ""
-                                }
-                            ]
-                        ]
+                     , View.Button.textButton []
+                        { label = "Play"
+                        , onPress = NormalModeSelected |> msgMapper |> Just
+                        }
+                        |> Element.html
+                        |> Element.el [ Element.centerX ]
                      ]
+                        |> Element.column (Grid.simple ++ [ Element.height <| Element.fill ])
+                        |> List.singleton
                         |> View.Shade.viewNormal []
                         |> Element.inFront
                    ]

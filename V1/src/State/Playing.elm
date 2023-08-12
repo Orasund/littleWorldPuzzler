@@ -1,4 +1,4 @@
-module State.Playing exposing (Mode(..), Model, Msg, TransitionData, init, update, view)
+module State.Playing exposing (Model, Msg, TransitionData, init, update, view)
 
 import Action
 import Config
@@ -10,7 +10,6 @@ import Element exposing (Element)
 import Element.Events
 import Framework
 import Grid.Bordered as Grid
-import Html.Attributes
 import Http exposing (Error(..))
 import Layout
 import Process
@@ -22,11 +21,8 @@ import UndoList exposing (UndoList)
 import View.Button
 import View.CellType
 import View.Collection as CollectionView
-import View.Color
-import View.Deck
 import View.Game as GameView
 import View.Header as HeaderView
-import View.PageSelector as PageSelectorView
 import View.Shade as Shade
 
 
@@ -34,12 +30,6 @@ import View.Shade as Shade
 ----------------------
 -- Model
 ----------------------
-
-
-type Mode
-    = Normal
-    | Training
-    | Challenge
 
 
 type Overlay
@@ -51,7 +41,6 @@ type alias State =
     { game : Game
     , selected : Maybe Selected
     , history : UndoList Game
-    , mode : Mode
     , collection : Set String
     , viewCollection : Bool
     , viewedCard : Maybe CellType
@@ -80,7 +69,6 @@ type Msg
 type alias TransitionData =
     { game : Game
     , seed : Seed
-    , mode : Mode
     }
 
 
@@ -95,11 +83,10 @@ type alias Action =
 
 
 init : TransitionData -> ( Model, Cmd Msg )
-init { game, seed, mode } =
+init { game, seed } =
     ( ( { game = game
         , selected = Nothing
         , history = UndoList.fresh game
-        , mode = mode
         , collection = Set.empty
         , viewCollection = False
         , viewedCard = Nothing
@@ -139,9 +126,9 @@ play ( { game, history } as state, seed ) =
 
 
 playFirst : ( Int, Int ) -> Model -> Action
-playFirst position ( { game, mode, initialSeed } as state, seed ) =
+playFirst position ( { game, initialSeed } as state, seed ) =
     Random.step
-        (Deck.playFirst (mode /= Challenge) game.deck
+        (Deck.playFirst True game.deck
             |> Random.map
                 (\deck ->
                     { state
@@ -156,12 +143,7 @@ playFirst position ( { game, mode, initialSeed } as state, seed ) =
                     }
                 )
         )
-        (if mode == Challenge then
-            initialSeed
-
-         else
-            seed
-        )
+        seed
         |> play
 
 
@@ -225,7 +207,7 @@ placeCard position selected (( { game }, _ ) as model) =
 
 
 update : Msg -> Model -> Action
-update msg (( { game, history, selected, mode, viewCollection, collection } as state, seed ) as model) =
+update msg (( { game, history, selected, viewCollection, collection } as state, seed ) as model) =
     let
         defaultCase : Action
         defaultCase =
@@ -287,11 +269,11 @@ update msg (( { game, history, selected, mode, viewCollection, collection } as s
                 newHistory =
                     history |> UndoList.new newGame
             in
-            if (newGame.board |> Grid.emptyPositions |> (==) []) && mode /= Training then
+            if newGame.board |> Grid.emptyPositions |> (==) [] then
                 Action.transitioning
                     { game = newGame
                     , history = newHistory
-                    , challenge = mode == Challenge
+                    , challenge = False
                     }
 
             else
@@ -381,18 +363,9 @@ view :
     -> Model
     -> Element msg
 view scale restartMsg msgMapper ( model, _ ) =
-    [ if model.mode == Challenge then
-        HeaderView.viewWithUndo
-            { restartMsg = restartMsg
-            , previousMsg = msgMapper Undo
-            , nextMsg = msgMapper Redo
-            }
-            model.game.score
-
-      else
-        HeaderView.view scale
-            restartMsg
-            model.game.score
+    [ HeaderView.view
+        restartMsg
+        model.game.score
     , if model.viewCollection then
         CollectionView.view scale
             (msgMapper << CardSelected)
@@ -403,7 +376,7 @@ view scale restartMsg msgMapper ( model, _ ) =
         GameView.view
             { scale = scale
             , selected = model.selected
-            , sort = model.mode /= Challenge
+            , sort = True
             , positionSelected =
                 case model.overlay of
                     Just (CardSelector position) ->
@@ -416,14 +389,6 @@ view scale restartMsg msgMapper ( model, _ ) =
             , placeCard = \a b -> PlaceCard a b |> msgMapper
             }
             model.game
-    , (if model.viewCollection then
-        PageSelectorView.viewCollection
-
-       else
-        PageSelectorView.viewGame
-      )
-      <|
-        msgMapper PageChangeRequested
     ]
         |> Element.column
             (Framework.container
@@ -432,14 +397,9 @@ view scale restartMsg msgMapper ( model, _ ) =
                             (\overlay ->
                                 case overlay of
                                     CardDetail cardDetail ->
-                                        [ [ cardDetail.card
-                                                |> View.CellType.asCard
-                                          , View.Button.textButton []
-                                                { label = "Pick Up"
-                                                , onPress = PickUp cardDetail.pos |> msgMapper |> Just
-                                                }
-                                                |> Layout.el [ Layout.contentCentered ]
-                                          ]
+                                        [ cardDetail.card
+                                            |> View.CellType.asCard
+                                        ]
                                             |> Layout.column (Layout.centered ++ [ Layout.gap Config.space ])
                                             |> Element.html
                                             --needed to play nice with elm-ui
@@ -449,11 +409,15 @@ view scale restartMsg msgMapper ( model, _ ) =
                                                 [ Element.Events.onClick (CloseOverlay |> msgMapper)
                                                 ]
                                             |> Element.inFront
-                                        ]
 
                                     CardSelector _ ->
                                         []
+                                            |> Shade.viewTransparent
+                                                [ Element.Events.onClick (CloseOverlay |> msgMapper)
+                                                ]
+                                            |> Element.inFront
                             )
+                        |> Maybe.map List.singleton
                         |> Maybe.withDefault []
                    )
             )

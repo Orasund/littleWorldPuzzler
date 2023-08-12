@@ -1,8 +1,8 @@
-module  State.Prepairing exposing (Model, Msg(..), update)
+module State.Prepairing exposing (Model, Msg(..), update)
 
 import Action
-import  Data.CellType exposing (CellType(..))
-import  Data.Deck exposing (Selected(..))
+import Data.CellType exposing (CellType(..))
+import Data.Deck exposing (Selected(..))
 import Random exposing (Seed)
 
 
@@ -24,7 +24,8 @@ type Msg
 
 
 type alias Action =
-    Action.Action Model
+    Action.Action
+        Model
         Never
         { scale : Float
         , seed : Seed

@@ -101,5 +101,7 @@ view scale msgMapper set maybeCellType =
         ]
     <|
         [ tree scale msgMapper set
-        , DeckView.viewOne scale maybeCellType
+        , maybeCellType
+            |> Maybe.map (DeckView.viewOne [])
+            |> Maybe.withDefault Element.none
         ]

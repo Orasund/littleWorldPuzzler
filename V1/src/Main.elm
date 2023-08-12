@@ -3,31 +3,28 @@ module Main exposing (main)
 import Action
 import Browser
 import Browser.Dom as Dom
-import Browser.Events exposing (onResize)
 import Element exposing (Element, Option)
 import Element.Background as Background
 import Element.Font as Font
 import Framework
-import Html exposing (Html)
+import Html
 import Html.Attributes as Attributes
 import Random
 import State.Finished as FinishedState
 import State.Playing as PlayingState
 import State.Prepairing as PreparingState
 import State.Ready as ReadyState
-import State.Replaying as ReplayingState
 import Task
-import View.Shade as Shade
 
 
 height : Float
 height =
-    925
+    600
 
 
 width : Float
 width =
-    608
+    400
 
 
 
@@ -46,7 +43,6 @@ type Model
     = Preparing PreparingState.Model
     | Ready ( ReadyState.Model, Config )
     | Playing ( PlayingState.Model, Config )
-    | Replaying ( ReplayingState.Model, Config )
     | Finished ( FinishedState.Model, Config )
 
 
@@ -54,7 +50,6 @@ type Msg
     = PlayingSpecific PlayingState.Msg
     | ReadySpecific ReadyState.Msg
     | PreparingSpecific PreparingState.Msg
-    | ReplayingSpecific ReplayingState.Msg
     | FinishedSpecific FinishedState.Msg
     | Resized Config
     | Restart
@@ -87,8 +82,9 @@ init _ =
         [ Random.generate (PreparingSpecific << PreparingState.GotSeed)
             Random.independentSeed
         , Task.perform
-            (\{ viewport } ->
-                { width = viewport.width, height = viewport.height }
+            (\_ ->
+                { width = width, height = height }
+                    --{ width = viewport.width, height = viewport.height }
                     |> (\dim ->
                             Resized
                                 { scale = calcScale dim
@@ -167,12 +163,6 @@ update msg model =
         ( FinishedSpecific _, Finished _ ) ->
             ( model, Cmd.none )
 
-        ( ReplayingSpecific replayingMsg, Replaying ( replayingModel, config ) ) ->
-            ReplayingState.update replayingMsg replayingModel
-                |> Action.config
-                |> Action.withUpdate (\m -> Replaying ( m, config )) never
-                |> Action.apply
-
         ( Restart, _ ) ->
             init ()
 
@@ -181,12 +171,6 @@ update msg model =
                 Playing ( playingModel, config ) ->
                     Playing
                         ( playingModel
-                        , { config | scale = scale, portraitMode = portraitMode }
-                        )
-
-                Replaying ( replayingModel, config ) ->
-                    Replaying
-                        ( replayingModel
                         , { config | scale = scale, portraitMode = portraitMode }
                         )
 
@@ -234,7 +218,11 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    onResize
+    Sub.none
+
+
+
+{--onResize
         (\w h ->
             { width = toFloat w, height = toFloat h }
                 |> (\dim ->
@@ -243,10 +231,7 @@ subscriptions _ =
                             , portraitMode = calcPortraitMode dim
                             }
                    )
-        )
-
-
-
+        )--}
 ----------------------
 -- View
 ----------------------
@@ -270,9 +255,6 @@ view model =
                 Playing ( playingModel, { scale } ) ->
                     PlayingState.view scale Restart PlayingSpecific playingModel
 
-                Replaying ( replayingModel, { scale } ) ->
-                    ReplayingState.view scale Restart ReplayingSpecific replayingModel
-
                 Finished ( finishedModel, { scale } ) ->
                     FinishedState.view scale Restart FinishedSpecific finishedModel
 
@@ -286,9 +268,6 @@ view model =
         portraitMode =
             case model of
                 Playing ( _, config ) ->
-                    config.portraitMode
-
-                Replaying ( _, config ) ->
                     config.portraitMode
 
                 Finished ( _, config ) ->
@@ -334,6 +313,8 @@ button:focus {
                     }
                 ]
              , Background.color <| Element.rgb255 44 48 51
+             , Element.width (Element.px (round width))
+             , Element.height (Element.px (round height))
              ]
                 ++ Framework.layoutAttributes
             )

@@ -1,6 +1,5 @@
 module State.Finished exposing (Model, Msg, TransitionData, init, view)
 
-import Data.Entry exposing (Entry)
 import Data.Game exposing (EndCondition(..), Game)
 import Element exposing (Element)
 import Element.Font as Font
@@ -9,7 +8,6 @@ import Firestore exposing (Error(..))
 import Framework
 import Framework.Button as Button
 import Framework.Heading as Heading
-import Http
 import UndoList exposing (UndoList)
 import View.Game as GameView
 import View.Header as HeaderView
@@ -100,7 +98,7 @@ view scale restartMsg _ model =
                 End m ->
                     m.game
     in
-    [ HeaderView.view scale restartMsg game.score
+    [ HeaderView.view restartMsg game.score
     , GameView.viewFinished scale game
     ]
         |> Element.column

@@ -1,4 +1,4 @@
-module View.Shade exposing (viewNormal, viewWon)
+module View.Shade exposing (viewNormal, viewTransparent, viewWon)
 
 import Element exposing (Attribute, Element)
 import Element.Background as Background
@@ -23,6 +23,17 @@ viewWon : List (Attribute msg) -> List (Element msg) -> Element msg
 viewWon attrs content =
     view
         ([ Background.color <| Element.rgba255 204 166 0 0.7
+         , Font.color <| Element.rgb255 0 0 0
+         ]
+            ++ attrs
+        )
+        content
+
+
+viewTransparent : List (Attribute msg) -> List (Element msg) -> Element msg
+viewTransparent attrs content =
+    view
+        ([ Background.color <| Element.rgba 0 0 0 0
          , Font.color <| Element.rgb255 0 0 0
          ]
             ++ attrs

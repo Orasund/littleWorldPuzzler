@@ -1,20 +1,25 @@
 module View.Deck exposing (view, viewOne)
 
 import Card
+import Config
 import Data.CellType as CellType exposing (CellType(..))
 import Data.Deck as Deck exposing (Deck, Selected(..))
 import Element exposing (Attribute, Element)
 import Element.Font as Font
+import Html exposing (Html)
+import Html.Attributes
+import Layout
+import View
 import View.CellType
 
 
-viewInactiveCard : Float -> Element msg -> Element msg
-viewInactiveCard scale content =
+viewInactiveCard : Element msg -> Element msg
+viewInactiveCard content =
     Element.el
-        [ Element.width <| Element.px <| floor <| 120 * scale
-        , Element.height <| Element.px <| floor <| 176 * scale
+        [ Element.width <| Element.px <| floor <| 85
+        , Element.height <| Element.px <| floor <| 160
         , Element.alignTop
-        , Element.padding <| floor <| 5 * scale
+        , Element.padding <| Config.smallSpace
         ]
     <|
         content
@@ -37,28 +42,25 @@ viewCardList scale sort =
             ]
 
 
-viewContent : Float -> CellType -> Element msg
-viewContent scale cellType =
-    Element.column
-        [ Element.spacing <| floor <| 40 * scale
-        , Element.centerX
-        , Element.centerY
-        ]
-        [ Element.el [ Font.size <| floor <| 60 * scale, Element.centerX ] <|
-            Element.text <|
-                CellType.toString cellType
-        , View.CellType.asRules cellType
-            |> List.map Element.html
-            |> Element.column
-                [ Font.size <| floor <| 11 * scale
-                , Element.spacing <| floor <| 5 * scale
-                , Element.centerX
-                ]
-        ]
+viewContent : CellType -> Html msg
+viewContent cellType =
+    [ CellType.toString cellType
+        |> Layout.text [ Html.Attributes.style "font-size" "40px" ]
+    , View.CellType.asRules cellType
+        |> Layout.column
+            [ Layout.gap <| Config.smallSpace
+            , Html.Attributes.style "font-size" "10px"
+            ]
+    ]
+        |> Layout.column
+            (Layout.centered
+                ++ [ Layout.gap 40
+                   ]
+            )
 
 
-viewAttributes : Float -> List (Attribute msg)
-viewAttributes scale =
+viewAttributes : List (Attribute msg)
+viewAttributes =
     [ Element.centerX
     , Element.spaceEvenly
 
@@ -67,46 +69,39 @@ viewAttributes scale =
     ]
 
 
-viewOne : Float -> Maybe CellType -> Element msg
-viewOne scale maybeCellType =
+viewOne : List (Attribute msg) -> CellType -> Element msg
+viewOne attrs cellType =
+    let
+        cardWidth =
+            60
+    in
     Element.el
         [ -- Element.height <| Element.px <| floor <| 200 * scale
           Element.centerX
         ]
     <|
-        case maybeCellType of
-            Just cellType ->
-                Card.hand []
-                    { width = 100 * scale
-                    , dimensions = ( 120, 176 )
-                    , cards =
-                        List.singleton <|
-                            Card.card
-                                { attributes = []
-                                , content = viewContent scale cellType
-                                , onPress = Nothing
-                                , selected = True
-                                }
-                    }
-
-            Nothing ->
-                Element.el
-                    [ Font.size <| floor <| 40 * scale
-                    , Font.family
-                        [ Font.sansSerif ]
-                    , Font.center
-                    , Font.color (Element.rgb 0 0 0)
-                    , Element.centerX
-                    , Element.centerY
-                    ]
-                <|
-                    Element.text "please select a card"
+        Card.hand attrs
+            { width = cardWidth
+            , dimensions = ( cardWidth, cardWidth * 2 / 3 )
+            , cards =
+                List.singleton <|
+                    Card.card
+                        { attributes = []
+                        , content = viewContent cellType |> Element.html
+                        , onPress = Nothing
+                        , selected = True
+                        }
+            }
 
 
 view : Float -> Bool -> Maybe (Selected -> msg) -> Maybe Selected -> Deck -> Element msg
 view scale sort maybeSelectedMsg maybeSelected deck =
-    Element.row (viewAttributes scale) <|
-        [ viewInactiveCard scale <|
+    let
+        cardWidth =
+            80
+    in
+    Element.row viewAttributes <|
+        [ viewInactiveCard <|
             Element.column
                 [ Element.spacing <| floor <| 10 * scale
                 , Element.centerX
@@ -125,39 +120,18 @@ view scale sort maybeSelectedMsg maybeSelected deck =
                         |> Maybe.withDefault []
                     )
                 ]
-        , Card.hand
-            [ Element.centerX
-
-            --, Element.height <| Element.px <| floor <| 200 * scale
-            ]
-            { width = 250 * scale
-            , dimensions = ( 120, 176 )
-            , cards =
-                List.concat
-                    [ [ Card.card
-                            { attributes = []
-                            , content =
-                                viewContent scale <|
-                                    Deck.first deck
-                            , onPress = maybeSelectedMsg |> Maybe.map (\fun -> fun First)
-                            , selected = maybeSelected == Just First
-                            }
-                      ]
-                    , case deck |> Deck.second of
-                        Just cellType ->
-                            [ Card.card
-                                { attributes = []
-                                , content = viewContent scale cellType
-                                , onPress = maybeSelectedMsg |> Maybe.map (\fun -> fun Second)
-                                , selected = maybeSelected == Just Second
-                                }
-                            ]
-
-                        Nothing ->
-                            []
-                    ]
-            }
-        , viewInactiveCard scale <|
+        , [ Deck.first deck |> Just
+          , deck |> Deck.second
+          ]
+            |> List.filterMap identity
+            |> List.map
+                (\cellType ->
+                    viewContent cellType
+                        |> View.card []
+                        |> Element.html
+                )
+            |> Element.row [ Element.spaceEvenly ]
+        , viewInactiveCard <|
             Element.column
                 [ Element.spacing <| floor <| 10 * scale
                 , Element.centerX
