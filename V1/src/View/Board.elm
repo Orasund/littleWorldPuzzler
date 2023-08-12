@@ -3,7 +3,6 @@ module View.Board exposing (toHtml, toHtmlWithoutInteraction)
 import Data.CellType as CellType exposing (CellType)
 import Data.Deck as Deck exposing (Deck, Selected(..))
 import Element exposing (Attribute, Element)
-import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
@@ -12,7 +11,6 @@ import Grid.Bordered as Grid exposing (Grid)
 import Html.Attributes
 import Layout
 import View.CardSelector
-import View.Rule as RuleView
 
 
 viewCell : List (Attribute msg) -> { scale : Float, position : ( Int, Int ), onPress : Maybe (( Int, Int ) -> msg) } -> Maybe CellType -> Element msg
@@ -23,26 +21,6 @@ viewCell attrs args maybeCellType =
          , Border.color <| Element.rgba255 219 219 219 1
          , Element.width <| Element.px <| floor <| args.scale * 100
          , Element.height <| Element.px <| floor <| args.scale * 100
-         , Element.inFront <|
-            Element.el
-                [ Element.height <| Element.fill
-                , Element.width <| Element.fill
-                , Background.color <| Element.rgb255 242 242 242
-                , Element.mouseOver [ Element.transparent True ]
-                ]
-            <|
-                Element.el
-                    [ Element.centerY
-                    , Font.size <| floor <| args.scale * 90
-                    , Element.centerX
-                    , Font.center
-                    ]
-                <|
-                    Element.text <|
-                        (maybeCellType
-                            |> Maybe.map CellType.toString
-                            |> Maybe.withDefault ""
-                        )
          ]
             ++ (case args.onPress of
                     Just msg ->
@@ -54,33 +32,18 @@ viewCell attrs args maybeCellType =
             ++ attrs
         )
     <|
-        Element.column
+        Element.el
             [ Element.centerY
+            , Font.size <| floor <| args.scale * 90
             , Element.centerX
             , Font.center
-            , Element.spacing <| floor <| args.scale * 10
             ]
         <|
-            case maybeCellType of
-                Just cellType ->
-                    [ Element.el
-                        [ Font.size <| floor <| args.scale * 50
-                        , Font.center
-                        , Element.centerX
-                        ]
-                      <|
-                        Element.text <|
-                            (cellType |> CellType.toString)
-                    , Element.column
-                        [ Font.size <| floor <| args.scale * 10
-                        , Element.spacing <| floor <| args.scale * 5
-                        , Element.centerX
-                        ]
-                        (RuleView.view cellType)
-                    ]
-
-                Nothing ->
-                    []
+            Element.text <|
+                (maybeCellType
+                    |> Maybe.map CellType.toString
+                    |> Maybe.withDefault ""
+                )
 
 
 toHtmlWithoutInteraction : { scale : Float } -> Grid CellType -> Element msg

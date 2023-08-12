@@ -11,3 +11,7 @@ space =
 
 bigSpace =
     24
+
+
+borderRadius =
+    space

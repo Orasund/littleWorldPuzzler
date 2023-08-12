@@ -6,12 +6,14 @@ import Element exposing (Element)
 import Element.Font as Font
 import Element.Input as Input
 import Firestore exposing (Error(..))
+import Framework
 import Framework.Button as Button
 import Framework.Heading as Heading
 import Http
 import UndoList exposing (UndoList)
 import View.Game as GameView
 import View.Header as HeaderView
+import View.Shade
 
 
 type alias TransitionData =
@@ -36,12 +38,9 @@ init { game, history, challenge } =
     ( End
         { game = game
         , history = history
-        , error = Nothing
         , challenge = challenge
         }
     , Cmd.none
-      {--Request.getHighscore { score = game.score, challenge = challenge }
-        |> Cmd.map RequestedHighscore--}
     )
 
 
@@ -55,21 +54,11 @@ type alias EndState =
     { game : Game
     , history : UndoList Game
     , challenge : Bool
-    , error : Maybe Error
-    }
-
-
-type alias LeaderboardState =
-    { game : Game
-    , highscore : Entry
-    , newHighscore : Bool
-    , error : Maybe Error
     }
 
 
 type Model
     = End EndState
-    | Highscore LeaderboardState
 
 
 
@@ -78,138 +67,50 @@ type Model
 ----------------------
 
 
-viewScore : { restartMsg : msg } -> { score : Int, response : Maybe (Result Error ( Int, Bool )) } -> List (Element msg)
-viewScore { restartMsg } { score, response } =
-    List.concat
-        [ [ Element.el (Heading.h2 ++ [ Element.centerX ]) <|
-                Element.text <|
-                    case response of
-                        Just (Ok ( _, True )) ->
-                            "New Highscore"
-
-                        _ ->
-                            "Game Over"
-          , Element.el (Heading.h3 ++ [ Element.centerX ]) <|
-                Element.text "Score"
-          , Element.el (Heading.h1 ++ [ Element.centerX ]) <|
-                Element.text <|
-                    String.fromInt <|
-                        score
-          ]
-        , case response of
-            Just (Ok ( highscore, _ )) ->
-                [ Element.el (Heading.h3 ++ [ Element.centerX ]) <|
-                    Element.text <|
-                        "Highscore"
-                , Element.el (Heading.h4 ++ [ Element.centerX ]) <|
-                    Element.text <|
-                        String.fromInt <|
-                            highscore
-                ]
-
-            Just (Err error) ->
-                List.singleton <|
-                    Element.paragraph
-                        [ Element.alignLeft
-                        , Font.color <| Element.rgb 255 0 0
-                        , Element.centerX
-                        ]
-                    <|
-                        [ Element.text <|
-                            viewError <|
-                                error
-                        ]
-
-            _ ->
-                []
-        , [ Input.button
-                (Button.simple
-                    ++ [ Font.family [ Font.sansSerif ]
-                       , Element.centerX
-                       , Font.color <| Element.rgb 0 0 0
-                       ]
-                )
-            <|
-                { onPress = Just restartMsg
-                , label =
-                    Element.text "Restart"
-                }
-          ]
-        ]
+viewScore : { restartMsg : msg } -> { score : Int } -> List (Element msg)
+viewScore { restartMsg } { score } =
+    [ Element.el (Heading.h2 ++ [ Element.centerX ]) <|
+        Element.text <|
+            "Game Over"
+    , Element.el (Heading.h3 ++ [ Element.centerX ]) <|
+        Element.text "Score"
+    , Element.el (Heading.h1 ++ [ Element.centerX ]) <|
+        Element.text <|
+            String.fromInt <|
+                score
+    , Input.button
+        (Button.simple
+            ++ [ Font.family [ Font.sansSerif ]
+               , Element.centerX
+               , Font.color <| Element.rgb 0 0 0
+               ]
+        )
+      <|
+        { onPress = Just restartMsg
+        , label = Element.text "Restart"
+        }
+    ]
 
 
-viewError : Error -> String
-viewError e =
-    case e of
-        Http_ err ->
-            case err of
-                Http.BadUrl string ->
-                    "BadUrl: " ++ string
-
-                Http.Timeout ->
-                    "Timeout"
-
-                Http.NetworkError ->
-                    "Network Error"
-
-                Http.BadStatus int ->
-                    "Response Status: " ++ String.fromInt int
-
-                Http.BadBody string ->
-                    string
-
-        Response err ->
-            err.message
-
-
-view :
-    Float
-    -> msg
-    -> (Msg -> msg)
-    -> Model
-    -> ( Maybe { isWon : Bool, shade : List (Element msg) }, List (Element msg) )
+view : Float -> msg -> (Msg -> msg) -> Model -> Element msg
 view scale restartMsg _ model =
     let
         ({ score } as game) =
             case model of
                 End m ->
                     m.game
-
-                Highscore m ->
-                    m.game
     in
-    ( Just
-        { isWon =
-            case model of
-                End _ ->
-                    False
-
-                Highscore { newHighscore } ->
-                    newHighscore
-        , shade =
-            viewScore
-                { restartMsg = restartMsg
-                }
-                { score = score
-                , response =
-                    case model of
-                        End { error } ->
-                            error |> Maybe.map Err
-
-                        Highscore { highscore, newHighscore, error } ->
-                            case error of
-                                Just err ->
-                                    Just (Err err)
-
-                                Nothing ->
-                                    Just <|
-                                        Ok <|
-                                            ( highscore.score
-                                            , newHighscore
-                                            )
-                }
-        }
-    , [ HeaderView.view scale restartMsg game.score
-      , GameView.viewFinished scale game
-      ]
-    )
+    [ HeaderView.view scale restartMsg game.score
+    , GameView.viewFinished scale game
+    ]
+        |> Element.column
+            (Framework.container
+                ++ [ viewScore
+                        { restartMsg = restartMsg
+                        }
+                        { score = score
+                        }
+                        |> View.Shade.viewWon []
+                        |> Element.inFront
+                   ]
+            )

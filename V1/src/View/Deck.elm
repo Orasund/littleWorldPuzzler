@@ -1,11 +1,11 @@
-module  View.Deck exposing (view, viewOne)
+module View.Deck exposing (view, viewOne)
 
 import Card
+import Data.CellType as CellType exposing (CellType(..))
+import Data.Deck as Deck exposing (Deck, Selected(..))
 import Element exposing (Attribute, Element)
 import Element.Font as Font
-import  Data.CellType as CellType exposing (CellType(..))
-import  Data.Deck as Deck exposing (Deck, Selected(..))
-import  View.Rule as RuleView
+import View.CellType
 
 
 viewInactiveCard : Float -> Element msg -> Element msg
@@ -47,13 +47,13 @@ viewContent scale cellType =
         [ Element.el [ Font.size <| floor <| 60 * scale, Element.centerX ] <|
             Element.text <|
                 CellType.toString cellType
-        , Element.column
-            [ Font.size <| floor <| 11 * scale
-            , Element.spacing <| floor <| 5 * scale
-            , Element.centerX
-            ]
-          <|
-            RuleView.view cellType
+        , View.CellType.asRules cellType
+            |> List.map Element.html
+            |> Element.column
+                [ Font.size <| floor <| 11 * scale
+                , Element.spacing <| floor <| 5 * scale
+                , Element.centerX
+                ]
         ]
 
 
@@ -95,6 +95,7 @@ viewOne scale maybeCellType =
                     , Font.family
                         [ Font.sansSerif ]
                     , Font.center
+                    , Font.color (Element.rgb 0 0 0)
                     , Element.centerX
                     , Element.centerY
                     ]

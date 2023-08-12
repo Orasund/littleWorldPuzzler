@@ -4,11 +4,11 @@ import Action
 import Browser
 import Browser.Dom as Dom
 import Browser.Events exposing (onResize)
-import Element exposing (Option)
+import Element exposing (Element, Option)
 import Element.Background as Background
 import Element.Font as Font
 import Framework
-import Html
+import Html exposing (Html)
 import Html.Attributes as Attributes
 import Random
 import State.Finished as FinishedState
@@ -264,7 +264,8 @@ view model =
             else
                 []
 
-        ( maybeShade, content ) =
+        content : Element Msg
+        content =
             case model of
                 Playing ( playingModel, { scale } ) ->
                     PlayingState.view scale Restart PlayingSpecific playingModel
@@ -279,7 +280,7 @@ view model =
                     ReadyState.view scale Restart ReadySpecific readyModel
 
                 Preparing _ ->
-                    ( Nothing, [ Element.text "" ] )
+                    Element.none
 
         portraitMode : Bool
         portraitMode =
@@ -306,6 +307,24 @@ view model =
             , Attributes.attribute "content" "width=device-width, initial-scale=1.0"
             ]
             []
+        , """
+html,body {
+    height:100%;
+    width:100%;
+    marign:0;
+}
+
+button:hover {
+    filter:brightness(0.90);
+}
+
+button:focus {
+    filter:brightness(0.75);
+}
+        """
+            |> Html.text
+            |> List.singleton
+            |> Html.node "style" []
         , Element.layoutWith
             { options = forceHover portraitMode ++ Framework.layoutOptions }
             ([ Font.family
@@ -316,27 +335,10 @@ view model =
                 ]
              , Background.color <| Element.rgb255 44 48 51
              ]
-                ++ (maybeShade
-                        |> Maybe.map
-                            (\{ isWon, shade } ->
-                                List.singleton <|
-                                    Element.inFront <|
-                                        (if isWon then
-                                            Shade.viewWon
-
-                                         else
-                                            Shade.viewNormal
-                                        )
-                                        <|
-                                            shade
-                            )
-                        |> Maybe.withDefault []
-                   )
                 ++ Framework.layoutAttributes
             )
           <|
-            Element.column Framework.container <|
-                content
+            content
         ]
     }
 

@@ -1,13 +1,15 @@
-module  State.Replaying exposing (Model, Msg, update, view)
+module State.Replaying exposing (Model, Msg, update, view)
 
 import Action
+import Data.CellType exposing (CellType(..))
+import Data.Deck exposing (Selected(..))
+import Data.Game exposing (Game)
 import Element exposing (Element)
-import  Data.CellType exposing (CellType(..))
-import  Data.Deck exposing (Selected(..))
-import  Data.Game exposing (Game)
-import  View.Game as GameView
-import  View.Header as HeaderView
+import Framework
+import Layout
 import UndoList exposing (UndoList)
+import View.Game as GameView
+import View.Header as HeaderView
 
 
 
@@ -53,24 +55,18 @@ update msg model =
 ----------------------
 
 
-view :
-    Float
-    -> msg
-    -> (Msg -> msg)
-    -> Model
-    -> ( Maybe { isWon : Bool, shade : List (Element msg) }, List (Element msg) )
+view : Float -> msg -> (Msg -> msg) -> Model -> Element msg
 view scale restartMsg msgMapper model =
     let
         ({ score } as game) =
             model.present
     in
-    ( Nothing
-    , [ HeaderView.viewWithUndo
-            { restartMsg = restartMsg
-            , previousMsg = msgMapper Previous
-            , nextMsg = msgMapper Next
-            }
-            score
-      , GameView.viewReplay scale game
-      ]
-    )
+    [ HeaderView.viewWithUndo
+        { restartMsg = restartMsg
+        , previousMsg = msgMapper Previous
+        , nextMsg = msgMapper Next
+        }
+        score
+    , GameView.viewReplay scale game
+    ]
+        |> Element.column Framework.container

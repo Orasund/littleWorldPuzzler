@@ -1,4 +1,4 @@
-module  View.Shade exposing (viewNormal, viewWon)
+module View.Shade exposing (viewNormal, viewWon)
 
 import Element exposing (Attribute, Element)
 import Element.Background as Background
@@ -8,21 +8,25 @@ import Framework.Card as Card
 import Framework.Grid as Grid
 
 
-viewNormal : List (Element msg) -> Element msg
-viewNormal content =
+viewNormal : List (Attribute msg) -> List (Element msg) -> Element msg
+viewNormal attrs content =
     view
-        [ Background.color <| Element.rgba255 0 0 0 0.7
-        , Font.color <| Element.rgb255 255 255 255
-        ]
+        ([ Background.color <| Element.rgba255 0 0 0 0.7
+         , Font.color <| Element.rgb255 255 255 255
+         ]
+            ++ attrs
+        )
         content
 
 
-viewWon : List (Element msg) -> Element msg
-viewWon content =
+viewWon : List (Attribute msg) -> List (Element msg) -> Element msg
+viewWon attrs content =
     view
-        [ Background.color <| Element.rgba255 204 166 0 0.7
-        , Font.color <| Element.rgb255 0 0 0
-        ]
+        ([ Background.color <| Element.rgba255 204 166 0 0.7
+         , Font.color <| Element.rgb255 0 0 0
+         ]
+            ++ attrs
+        )
         content
 
 

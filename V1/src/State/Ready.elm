@@ -1,19 +1,21 @@
-module  State.Ready exposing (Model, Msg, init, update, view)
+module State.Ready exposing (Model, Msg, init, update, view)
 
 import Action
+import Data.Game as Game exposing (Game)
 import Element exposing (Element)
 import Element.Font as Font
 import Element.Input as Input
+import Framework
 import Framework.Button as Button
 import Framework.Card as Card
 import Framework.Grid as Grid
 import Framework.Heading as Heading
-import  Data.Game as Game exposing (Game)
-import  State.Playing as PlayingState exposing (Mode(..))
-import  View.Game as GameView
-import  View.Header as HeaderView
 import Random exposing (Generator, Seed)
+import State.Playing as PlayingState exposing (Mode(..))
 import Time exposing (Month(..))
+import View.Game as GameView
+import View.Header as HeaderView
+import View.Shade
 
 
 
@@ -107,53 +109,49 @@ viewMode msg { title, desc } =
         }
 
 
-view :
-    Float
-    -> msg
-    -> (Msg -> msg)
-    -> Model
-    -> ( Maybe { isWon : Bool, shade : List (Element msg) }, List (Element msg) )
+view : Float -> msg -> (Msg -> msg) -> Model -> Element msg
 view scale restartMsg msgMapper ( game, _ ) =
-    ( Just
-        { isWon = False
-        , shade =
-            [ Element.wrappedRow (Grid.simple ++ [ Element.height <| Element.fill ])
-                [ Element.row
-                    (Grid.simple
-                        ++ [ Element.width <| Element.shrink
-                           , Element.centerY
-                           ]
-                    )
-                    [ Element.el
-                        [ Font.size <| floor <| scale * 150
-                        , Font.family
-                            [ Font.typeface "Noto Emoji" ]
+    [ HeaderView.view scale restartMsg game.score
+    , GameView.viewHome scale game
+    ]
+        |> Element.column
+            (Framework.container
+                ++ [ [ Element.wrappedRow (Grid.simple ++ [ Element.height <| Element.fill ])
+                        [ Element.row
+                            (Grid.simple
+                                ++ [ Element.width <| Element.shrink
+                                   , Element.centerY
+                                   ]
+                            )
+                            [ Element.el
+                                [ Font.size <| floor <| scale * 150
+                                , Font.family
+                                    [ Font.typeface "Noto Emoji" ]
+                                ]
+                              <|
+                                Element.text "🌍"
+                            , Element.column
+                                [ Font.size <| floor <| scale * 80
+                                , Element.centerX
+                                , Font.color <| Element.rgb255 255 255 255
+                                , Font.center
+                                ]
+                              <|
+                                [ Element.text "Little"
+                                , Element.text "World"
+                                , Element.text "Puzzler"
+                                ]
+                            ]
+                        , Element.column (Grid.simple ++ [ Element.centerY ]) <|
+                            [ viewMode
+                                (msgMapper <| NormalModeSelected)
+                                { title = "Play"
+                                , desc = ""
+                                }
+                            ]
                         ]
-                      <|
-                        Element.text "🌍"
-                    , Element.column
-                        [ Font.size <| floor <| scale * 80
-                        , Element.centerX
-                        , Font.color <| Element.rgb255 255 255 255
-                        , Font.center
-                        ]
-                      <|
-                        [ Element.text "Little"
-                        , Element.text "World"
-                        , Element.text "Puzzler"
-                        ]
-                    ]
-                , Element.column (Grid.simple ++ [ Element.centerY ]) <|
-                    [ viewMode
-                        (msgMapper <| NormalModeSelected)
-                        { title = "Play"
-                        , desc = ""
-                        }
-                    ]
-                ]
-            ]
-        }
-    , [ HeaderView.view scale restartMsg game.score
-      , GameView.viewHome scale game
-      ]
-    )
+                     ]
+                        |> View.Shade.viewNormal []
+                        |> Element.inFront
+                   ]
+            )
