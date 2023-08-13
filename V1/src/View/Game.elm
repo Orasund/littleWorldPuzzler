@@ -1,4 +1,4 @@
-module View.Game exposing (view, viewFinished, viewHome, viewReplay)
+module View.Game exposing (viewFinished, viewHome, viewReplay)
 
 import Data.Card exposing (Card(..))
 import Data.Deck exposing (Selected(..))
@@ -9,6 +9,8 @@ import Element.Border as Border
 import Element.Font as Font
 import Framework.Grid as Grid
 import Framework.Heading as Heading
+import Html exposing (Html)
+import Layout
 import View.Board as BoardView
 import View.Deck as DeckView
 
@@ -18,7 +20,7 @@ viewFinished scale { board, deck } =
     Element.column Grid.simple
         [ BoardView.toHtmlWithoutInteraction { scale = scale }
             board
-        , DeckView.view scale deck
+        , DeckView.view deck |> Element.html
         ]
 
 
@@ -55,7 +57,7 @@ viewReplay scale { board, deck } =
     <|
         [ BoardView.toHtmlWithoutInteraction { scale = scale }
             board
-        , DeckView.view scale deck
+        , DeckView.view deck |> Element.html
         ]
 
 
@@ -64,28 +66,5 @@ viewHome scale { board, deck } =
     Element.column Grid.simple <|
         [ BoardView.toHtmlWithoutInteraction { scale = scale }
             board
-        , DeckView.view scale deck
-        ]
-
-
-view :
-    { scale : Float
-    , selected : Maybe Selected
-    , positionSelected : Maybe ( Int, Int )
-    , placeCard : ( Int, Int ) -> Selected -> msg
-    , positionSelectedMsg : ( Int, Int ) -> msg
-    }
-    -> Game
-    -> Element msg
-view args { board, deck } =
-    Element.column Grid.simple <|
-        [ BoardView.toHtml
-            { scale = args.scale
-            , onPress = Just args.positionSelectedMsg
-            , onPlace = args.placeCard
-            , positionSelected = args.positionSelected
-            , deck = deck
-            }
-            board
-        , DeckView.view args.scale deck
+        , DeckView.view deck |> Element.html
         ]

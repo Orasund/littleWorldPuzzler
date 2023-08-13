@@ -6,6 +6,21 @@ cardBackground =
     "color-mix(in lch, " ++ secondary ++ " 10%," ++ background ++ ")"
 
 
+borderColor : String
+borderColor =
+    "color-mix(in lch, " ++ secondary ++ " 10%," ++ background ++ ")"
+
+
+successShadeColor : String
+successShadeColor =
+    "color-mix(in lch, " ++ primary ++ ", transparent 25%)"
+
+
+shadeColor : String
+shadeColor =
+    "color-mix(in lch, " ++ secondary ++ ", transparent 25%)"
+
+
 
 ---
 

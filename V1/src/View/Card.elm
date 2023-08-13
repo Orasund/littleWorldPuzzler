@@ -1,4 +1,4 @@
-module View.CellType exposing (..)
+module View.Card exposing (..)
 
 import Automata.Neighborhood as Neighborhood
 import Automata.Rule as Rule
@@ -68,10 +68,8 @@ asRules attrs cellType =
     cellType
         |> Rule.rules
         |> List.map
-            (\{ from, to, neighbors } ->
-                (from |> Maybe.map CellType.toString |> Maybe.withDefault " ")
-                    ++ "➕"
-                    ++ Neighborhood.toString neighbors
+            (\{ to, neighbors } ->
+                Neighborhood.toString neighbors
                     ++ "➡"
                     ++ (to |> Maybe.map CellType.toString |> Maybe.withDefault " ")
                     |> Layout.text []

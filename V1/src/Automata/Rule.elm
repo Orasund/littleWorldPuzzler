@@ -56,45 +56,36 @@ intoRule ruleType =
 rules : Card -> List (Rule Card)
 rules cellType =
     (case cellType of
-        Water ->
-            [ Disapears
-            , Surrounds Lake
-            ]
-
         Plant ->
-            [ Transforms { by = [ Worm ], to = Worm }
-
-            --, Transforms { by = [ Water ], to = Tree }
-            --, Combines3 { by = Plant, to = Tree }
-            ]
-
-        Cactus ->
-            []
-
-        Tree ->
-            [ TurnsInto Fire
-            , Transforms { by = [ Worm ], to = Bird }
+            [ Transforms { by = [ Mouse ], to = Mouse }
+            , Combines3 { by = Cat, to = Tree }
             ]
 
         Stone ->
-            [ -- Transforms { by = [ Water, Plant ], to = Worm }
-              --Transforms { by = [ Tree ], to = Worm }
-              --   Combines3 { by = Plant, to = Worm }
-              Combines3 { by = Stone, to = Worm }
+            [ Combines3 { by = Plant, to = Mouse }
+            , Combines3 { by = Mouse, to = Cat }
             ]
 
-        Worm ->
+        Mouse ->
             [ KilledBy Plant
-            , TurnsInto Bird
+            , TurnsInto Cat
             ]
 
-        Bird ->
-            [ KilledBy Worm ]
+        Cat ->
+            [ KilledBy Mouse
+            , KilledBy Bear
+            ]
 
+        Tree ->
+            [ Combines3 { by = Cat, to = Bear } ]
+
+        Bear ->
+            [ KilledBy Cat ]
+
+        -- Old
         Lake ->
             [ KilledBy2 Fire
             , TurnsInto Ice
-            , Spawns Tree
             ]
 
         Fire ->

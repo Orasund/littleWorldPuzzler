@@ -11,7 +11,7 @@ import Grid.Bordered as Grid exposing (Grid)
 
 columns : Int
 columns =
-    4
+    3
 
 
 rows : Int

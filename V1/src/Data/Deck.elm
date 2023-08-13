@@ -48,7 +48,7 @@ fromList list =
 
         [] ->
             { remaining = []
-            , current = Tree
+            , current = Plant
             , played = []
             }
 

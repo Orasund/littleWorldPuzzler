@@ -8,13 +8,13 @@ module Data.Card exposing
 
 
 type Card
-    = Water
-    | Plant
-    | Cactus
-    | Tree
+    = Plant
     | Stone
-    | Worm
-    | Bird
+    | Mouse
+    | Cat
+    | Tree
+    | Bear
+      --Old
     | Lake
     | Fire
     | Mountain
@@ -29,7 +29,7 @@ type Card
 list : List Card
 list =
     --Also works as execution order for conflicting rules
-    [ Snow, Fire, Glacier, Volcano, Mountain, Evergreen, Ice, Lake, Tree, Weed, Water, Plant, Cactus, Stone, Worm, Bird ]
+    [ Snow, Fire, Glacier, Volcano, Mountain, Evergreen, Ice, Lake, Weed, Plant, Stone, Mouse, Cat, Tree, Bear ]
 
 
 deck : List Card
@@ -37,6 +37,11 @@ deck =
     [ Plant
     , Plant
     , Plant
+    , Plant
+    , Plant
+    , Plant
+    , Plant
+    , Stone
     , Stone
     , Stone
     ]
@@ -46,27 +51,25 @@ toString : Card -> String
 toString cellType =
     String.fromChar <|
         case cellType of
-            Water ->
-                '💧'
-
             Plant ->
-                '🌱'
-
-            Cactus ->
-                '🌵'
-
-            Tree ->
-                '🌳'
+                '🌿'
 
             Stone ->
                 '🪨'
 
-            Worm ->
-                '🪱'
+            Mouse ->
+                '🐭'
 
-            Bird ->
-                '🦉'
+            Cat ->
+                '🐱'
 
+            Bear ->
+                '🐺'
+
+            Tree ->
+                '🌳'
+
+            --Old
             Lake ->
                 '🌊'
 
@@ -98,27 +101,25 @@ toString cellType =
 name : Card -> String
 name cellType =
     case cellType of
-        Water ->
-            "Water"
-
         Plant ->
-            "Plant"
-
-        Cactus ->
-            "Dead Leafs"
-
-        Tree ->
-            "Wood"
+            "Bush"
 
         Stone ->
             "Stone"
 
-        Worm ->
-            "Worm"
+        Mouse ->
+            "Mouse"
 
-        Bird ->
-            "Bird"
+        Cat ->
+            "Cat"
 
+        Tree ->
+            "Tree"
+
+        Bear ->
+            "Bear"
+
+        --Old
         Lake ->
             "Lake"
 

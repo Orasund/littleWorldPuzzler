@@ -2,7 +2,8 @@ module Main exposing (main)
 
 import Action
 import Browser
-import Element exposing (Element, Option)
+import Data.Game as Game
+import Element exposing (Element)
 import Element.Background as Background
 import Element.Font as Font
 import Framework
@@ -12,7 +13,6 @@ import Random
 import State.Finished as FinishedState
 import State.Playing as PlayingState
 import State.Prepairing as PreparingState
-import State.Ready as ReadyState
 import Task
 
 
@@ -40,14 +40,12 @@ type alias Config =
 
 type Model
     = Preparing PreparingState.Model
-    | Ready ( ReadyState.Model, Config )
-    | Playing ( PlayingState.Model, Config )
-    | Finished ( FinishedState.Model, Config )
+    | Playing PlayingState.Model
+    | Finished FinishedState.Model
 
 
 type Msg
     = PlayingSpecific PlayingState.Msg
-    | ReadySpecific ReadyState.Msg
     | PreparingSpecific PreparingState.Msg
     | FinishedSpecific FinishedState.Msg
     | Resized Config
@@ -110,46 +108,28 @@ update msg model =
                 |> Action.config
                 |> Action.withUpdate Preparing never
                 |> Action.withTransition
-                    (\{ scale, portraitMode, seed } ->
-                        ReadyState.init seed
+                    (\{ seed } ->
+                        Random.step Game.generator seed
+                            |> (\( game, s ) -> { game = game, seed = s })
+                            |> PlayingState.init
                             |> (\( m, c ) ->
-                                    ( ( m
-                                      , { scale = scale
-                                        , portraitMode = portraitMode
-                                        }
-                                      )
+                                    ( m
                                     , c
                                     )
                                )
-                    )
-                    Ready
-                    ReadySpecific
-                |> Action.apply
-
-        ( ReadySpecific readyMsg, Ready ( readyModel, config ) ) ->
-            ReadyState.update readyMsg readyModel
-                |> Action.config
-                |> Action.withUpdate (\m -> Ready ( m, config )) ReadySpecific
-                |> Action.withTransition
-                    (PlayingState.init
-                        >> (\( m, c ) ->
-                                ( ( m, config )
-                                , c
-                                )
-                           )
                     )
                     Playing
                     PlayingSpecific
                 |> Action.apply
 
-        ( PlayingSpecific playingMsg, Playing ( playingModel, config ) ) ->
+        ( PlayingSpecific playingMsg, Playing playingModel ) ->
             PlayingState.update playingMsg playingModel
                 |> Action.config
-                |> Action.withUpdate (\m -> Playing ( m, config )) PlayingSpecific
+                |> Action.withUpdate (\m -> Playing m) PlayingSpecific
                 |> Action.withTransition
                     (FinishedState.init
                         >> (\( m, c ) ->
-                                ( ( m, config )
+                                ( m
                                 , c
                                 )
                            )
@@ -167,34 +147,22 @@ update msg model =
 
         ( Resized { scale, portraitMode }, _ ) ->
             ( case model of
-                Playing ( playingModel, config ) ->
+                Playing playingModel ->
                     Playing
-                        ( playingModel
-                        , { config | scale = scale, portraitMode = portraitMode }
-                        )
+                        playingModel
 
-                Finished ( finishedModel, config ) ->
+                Finished finishedModel ->
                     Finished
-                        ( finishedModel
-                        , { config | scale = scale, portraitMode = portraitMode }
-                        )
-
-                Ready ( readyModel, config ) ->
-                    Ready
-                        ( readyModel
-                        , { config | scale = scale, portraitMode = portraitMode }
-                        )
+                        finishedModel
 
                 Preparing ({ seed } as prepairingModel) ->
                     case seed of
                         Just s ->
-                            Ready
-                                ( ReadyState.init s
-                                    |> Tuple.first
-                                , { scale = scale
-                                  , portraitMode = portraitMode
-                                  }
-                                )
+                            Random.step Game.generator s
+                                |> (\( game, s2 ) -> { game = game, seed = s2 })
+                                |> PlayingState.init
+                                |> Tuple.first
+                                |> Playing
 
                         Nothing ->
                             Preparing
@@ -239,44 +207,17 @@ subscriptions _ =
 view : Model -> Browser.Document Msg
 view model =
     let
-        forceHover : Bool -> List Option
-        forceHover bool =
-            if bool then
-                [ Element.forceHover
-                ]
-
-            else
-                []
-
         content : Element Msg
         content =
             case model of
-                Playing ( playingModel, { scale } ) ->
-                    PlayingState.view scale Restart PlayingSpecific playingModel
+                Playing playingModel ->
+                    PlayingState.view 1 Restart PlayingSpecific playingModel
 
-                Finished ( finishedModel, { scale } ) ->
-                    FinishedState.view scale Restart FinishedSpecific finishedModel
-
-                Ready ( readyModel, { scale } ) ->
-                    ReadyState.view scale Restart ReadySpecific readyModel
+                Finished finishedModel ->
+                    FinishedState.view 1 Restart FinishedSpecific finishedModel
 
                 Preparing _ ->
                     Element.none
-
-        portraitMode : Bool
-        portraitMode =
-            case model of
-                Playing ( _, config ) ->
-                    config.portraitMode
-
-                Finished ( _, config ) ->
-                    config.portraitMode
-
-                Ready ( _, config ) ->
-                    config.portraitMode
-
-                Preparing _ ->
-                    False
     in
     { title = "Little World Puzzler"
     , body =
@@ -303,22 +244,19 @@ button:focus {
             |> Html.text
             |> List.singleton
             |> Html.node "style" []
-        , Element.layoutWith
-            { options = forceHover portraitMode ++ Framework.layoutOptions }
-            ([ Font.family
-                [ Font.external
-                    { url = "font.css"
-                    , name = "Noto Emoji"
-                    }
+        , content
+            |> Element.layoutWith
+                { options = Framework.layoutOptions }
+                [ Font.family
+                    [ Font.external
+                        { url = "font.css"
+                        , name = "Noto Emoji"
+                        }
+                    ]
+                , Background.color <| Element.rgb255 44 48 51
+                , Element.width (Element.px (round width))
+                , Element.height (Element.px (round height))
                 ]
-             , Background.color <| Element.rgb255 44 48 51
-             , Element.width (Element.px (round width))
-             , Element.height (Element.px (round height))
-             ]
-                ++ Framework.layoutAttributes
-            )
-          <|
-            content
         ]
     }
 

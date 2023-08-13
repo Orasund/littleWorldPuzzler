@@ -2,11 +2,11 @@ module State.Finished exposing (Model, Msg, TransitionData, init, view)
 
 import Data.Game exposing (EndCondition(..), Game)
 import Element exposing (Element)
-import Element.Font as Font
-import Element.Input as Input
 import Framework
-import Framework.Button as Button
-import Framework.Heading as Heading
+import Html exposing (Html)
+import Html.Attributes
+import Layout
+import View.Button
 import View.Game as GameView
 import View.Header as HeaderView
 import View.Shade
@@ -57,29 +57,17 @@ type Model
 ----------------------
 
 
-viewScore : { restartMsg : msg } -> { score : Int } -> List (Element msg)
+viewScore : { restartMsg : msg } -> { score : Int } -> Html msg
 viewScore { restartMsg } { score } =
-    [ Element.el (Heading.h2 ++ [ Element.centerX ]) <|
-        Element.text <|
-            "Game Over"
-    , Element.el (Heading.h3 ++ [ Element.centerX ]) <|
-        Element.text "Score"
-    , Element.el (Heading.h1 ++ [ Element.centerX ]) <|
-        Element.text <|
-            String.fromInt <|
-                score
-    , Input.button
-        (Button.simple
-            ++ [ Font.family [ Font.sansSerif ]
-               , Element.centerX
-               , Font.color <| Element.rgb 0 0 0
-               ]
-        )
-      <|
+    [ "Game Over" |> Layout.text [ Html.Attributes.style "font-size" "2rem" ]
+    , "Score" |> Layout.text [ Html.Attributes.style "font-size" "2rem" ]
+    , score |> String.fromInt |> Layout.text [ Html.Attributes.style "font-size" "3rem" ]
+    , View.Button.textButton [ Html.Attributes.style "font-family" "sans-serif" ] <|
         { onPress = Just restartMsg
-        , label = Element.text "Restart"
+        , label = "Restart"
         }
     ]
+        |> Layout.column []
 
 
 view : Float -> msg -> (Msg -> msg) -> Model -> Element msg
@@ -90,7 +78,7 @@ view scale restartMsg _ model =
                 End m ->
                     m.game
     in
-    [ HeaderView.view restartMsg game.score
+    [ HeaderView.view restartMsg game.score |> Element.html
     , GameView.viewFinished scale game
     ]
         |> Element.column
@@ -100,7 +88,8 @@ view scale restartMsg _ model =
                         }
                         { score = score
                         }
-                        |> View.Shade.viewWon []
+                        |> View.Shade.success []
+                        |> Element.html
                         |> Element.inFront
                    ]
             )

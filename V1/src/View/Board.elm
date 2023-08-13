@@ -2,72 +2,75 @@ module View.Board exposing (toHtml, toHtmlWithoutInteraction)
 
 import Data.Card as CellType exposing (Card)
 import Data.Deck as Deck exposing (Deck, Selected(..))
-import Element exposing (Attribute, Element)
-import Element.Border as Border
-import Element.Events as Events
-import Element.Font as Font
+import Element exposing (Element)
 import Framework.Grid as Grid
 import Grid.Bordered as Grid exposing (Grid)
+import Html exposing (Attribute, Html)
 import Html.Attributes
 import Layout
 import View.CardSelector
+import View.Color
 
 
-viewCell : List (Attribute msg) -> { scale : Float, position : ( Int, Int ), onPress : Maybe (( Int, Int ) -> msg) } -> Maybe Card -> Element msg
+viewCell : List (Html.Attribute msg) -> { position : ( Int, Int ), onPress : Maybe (( Int, Int ) -> msg) } -> Maybe Card -> Html msg
 viewCell attrs args maybeCellType =
-    Element.el
-        ([ Element.centerX
-         , Border.width 1
-         , Border.color <| Element.rgba255 219 219 219 1
-         , Element.width <| Element.px <| floor <| args.scale * 100
-         , Element.height <| Element.px <| floor <| args.scale * 100
-         ]
-            ++ (case args.onPress of
-                    Just msg ->
-                        [ Events.onClick <| msg args.position ]
-
-                    Nothing ->
-                        []
-               )
-            ++ attrs
-        )
-    <|
-        Element.el
-            [ Element.centerY
-            , Font.size <| floor <| args.scale * 90
-            , Element.centerX
-            , Font.center
+    let
+        size =
+            80
+    in
+    maybeCellType
+        |> Maybe.map CellType.toString
+        |> Maybe.withDefault ""
+        |> Layout.text
+            [ Html.Attributes.style "z-index" "1"
+            , Html.Attributes.style "font-size" "60px"
             ]
-        <|
-            Element.text <|
-                (maybeCellType
-                    |> Maybe.map CellType.toString
-                    |> Maybe.withDefault ""
-                )
+        |> Layout.el
+            ([ Html.Attributes.style "border" ("1px solid " ++ View.Color.borderColor)
+             , Html.Attributes.style "height" (String.fromFloat size ++ "px")
+             , Html.Attributes.style "width" (String.fromFloat size ++ "px")
+             ]
+                ++ Layout.centered
+                ++ (case args.onPress of
+                        Just msg ->
+                            Layout.asButton
+                                { label = ""
+                                , onPress = msg args.position |> Just
+                                }
+
+                        Nothing ->
+                            []
+                   )
+                ++ attrs
+            )
 
 
 toHtmlWithoutInteraction : { scale : Float } -> Grid Card -> Element msg
-toHtmlWithoutInteraction args =
-    view
-        { scale = args.scale
-        , onPress = Nothing
-        , onPlace = \_ _ -> Nothing
-        , positionSelected = Nothing
-        , deck = Nothing
-        }
+toHtmlWithoutInteraction args grid =
+    grid
+        |> view []
+            { scale = args.scale
+            , onPress = Nothing
+            , onPlace = \_ _ -> Nothing
+            , positionSelected = Nothing
+            , deck = Nothing
+            }
+        |> Element.html
 
 
 toHtml :
-    { scale : Float
-    , onPress : Maybe (( Int, Int ) -> msg)
-    , onPlace : ( Int, Int ) -> Selected -> msg
-    , positionSelected : Maybe ( Int, Int )
-    , deck : Deck
-    }
+    List (Attribute msg)
+    ->
+        { scale : Float
+        , onPress : Maybe (( Int, Int ) -> msg)
+        , onPlace : ( Int, Int ) -> Selected -> msg
+        , positionSelected : Maybe ( Int, Int )
+        , deck : Deck
+        }
     -> Grid Card
-    -> Element msg
-toHtml args =
-    view
+    -> Html msg
+toHtml attrs args =
+    view attrs
         { scale = args.scale
         , onPress = args.onPress
         , onPlace = \a b -> args.onPlace a b |> Just
@@ -77,67 +80,63 @@ toHtml args =
 
 
 view :
-    { scale : Float
-    , onPress : Maybe (( Int, Int ) -> msg)
-    , onPlace : ( Int, Int ) -> Selected -> Maybe msg
-    , positionSelected : Maybe ( Int, Int )
-    , deck : Maybe Deck
-    }
+    List (Attribute msg)
+    ->
+        { scale : Float
+        , onPress : Maybe (( Int, Int ) -> msg)
+        , onPlace : ( Int, Int ) -> Selected -> Maybe msg
+        , positionSelected : Maybe ( Int, Int )
+        , deck : Maybe Deck
+        }
     -> Grid Card
-    -> Element msg
-view args grid =
-    Element.column
-        (Grid.compact
-            ++ [ Element.centerX
-               , Element.width <| Element.shrink
-               , Element.height <| Element.px <| floor <| args.scale * 400
-               ]
-        )
-    <|
+    -> Html msg
+view attrs args grid =
+    Layout.column attrs <|
         (grid
             |> Grid.foldr
                 (\( x, y ) maybeCellType ( workingRow, list ) ->
                     let
-                        newRow : List (Element msg)
+                        newRow : List (Html msg)
                         newRow =
                             (case args.positionSelected of
                                 Just a ->
                                     if a == ( x, y ) then
-                                        viewCell
-                                            [ [ args.deck |> Maybe.map Deck.first |> Maybe.map (Tuple.pair First)
-                                              , args.deck |> Maybe.andThen Deck.second |> Maybe.map (Tuple.pair Second)
-                                              ]
-                                                |> List.filterMap identity
-                                                |> View.CardSelector.toHtml { onSelect = args.onPlace a }
-                                                |> Layout.el
-                                                    ([ Html.Attributes.style "height" "100%"
-                                                     , Html.Attributes.style "z-index" "1"
-                                                     ]
-                                                        ++ Layout.centered
-                                                    )
-                                                |> Element.html
-                                                |> Element.inFront
-                                            ]
-                                            { scale = args.scale
-                                            , position = ( x, y )
+                                        [ viewCell []
+                                            { position = ( x, y )
                                             , onPress = Nothing
                                             }
+                                            maybeCellType
+                                        , [ args.deck |> Maybe.map Deck.first |> Maybe.map (Tuple.pair First)
+                                          , args.deck |> Maybe.andThen Deck.second |> Maybe.map (Tuple.pair Second)
+                                          ]
+                                            |> List.filterMap identity
+                                            |> View.CardSelector.toHtml { onSelect = args.onPlace a }
+                                            |> Layout.el
+                                                ([ Html.Attributes.style "height" "100%"
+                                                 , Html.Attributes.style "z-index" "10"
+                                                 , Html.Attributes.style "position" "absolute"
+                                                 , Html.Attributes.style "top" "0"
+                                                 , Html.Attributes.style "left" "-12.5%"
+                                                 ]
+                                                    ++ Layout.centered
+                                                )
+                                        ]
+                                            |> Html.div [ Html.Attributes.style "position" "relative" ]
 
                                     else
                                         viewCell []
-                                            { scale = args.scale
-                                            , position = ( x, y )
+                                            { position = ( x, y )
                                             , onPress = args.onPress
                                             }
+                                            maybeCellType
 
                                 Nothing ->
                                     viewCell []
-                                        { scale = args.scale
-                                        , position = ( x, y )
+                                        { position = ( x, y )
                                         , onPress = args.onPress
                                         }
+                                        maybeCellType
                             )
-                                maybeCellType
                                 :: workingRow
                     in
                     if y == 0 then
@@ -149,7 +148,7 @@ view args grid =
                 ( [], [] )
             |> Tuple.second
             |> List.map
-                (Element.row
+                (Layout.row
                     []
                 )
         )

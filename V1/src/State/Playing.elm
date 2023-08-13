@@ -1,6 +1,7 @@
 module State.Playing exposing (Model, Msg, TransitionData, init, update, view)
 
 import Action
+import Config
 import Data.Board as Board
 import Data.Card as CellType exposing (Card(..))
 import Data.Deck as Deck exposing (Selected(..))
@@ -10,12 +11,17 @@ import Element exposing (Element)
 import Element.Events
 import Framework
 import Grid.Bordered as Grid
+import Html
+import Html.Attributes
+import Layout
 import Process
 import Random exposing (Generator, Seed)
 import Random.List
 import Set exposing (Set)
 import State.Finished as FinishedState
 import Task
+import View.Board
+import View.Deck
 import View.Game as GameView
 import View.Header as HeaderView
 import View.Overlay
@@ -126,7 +132,7 @@ openNewCardPicker : Model -> Generator Model
 openNewCardPicker model =
     model.collection
         |> Dict.values
-        |> Random.List.choices 2
+        |> Random.List.choices 1
         |> Random.map
             (\( list, _ ) ->
                 { model
@@ -296,53 +302,58 @@ view :
     -> Model
     -> Element msg
 view scale restartMsg msgMapper model =
-    [ HeaderView.view
-        restartMsg
-        model.game.score
-    , GameView.view
-        { scale = scale
-        , selected = model.selected
-        , positionSelected =
-            case model.overlay of
-                Just (CardSelector position) ->
-                    Just position
+    [ [ HeaderView.view
+            restartMsg
+            model.game.score
+      , View.Board.toHtml []
+            { scale = scale
+            , onPress = (\a -> PositionSelected a |> msgMapper) |> Just
+            , onPlace = \a b -> PlaceCard a b |> msgMapper
+            , positionSelected =
+                case model.overlay of
+                    Just (CardSelector position) ->
+                        Just position
 
-                _ ->
-                    Nothing
-        , positionSelectedMsg = msgMapper << PositionSelected
-        , placeCard = \a b -> PlaceCard a b |> msgMapper
-        }
-        model.game
-    ]
-        |> Element.column
-            (Framework.container
-                ++ (model.overlay
-                        |> Maybe.map
-                            (\overlay ->
-                                case overlay of
-                                    CardDetail cardDetail ->
-                                        View.Overlay.cardDetail cardDetail.card
-                                            |> List.singleton
-                                            |> Shade.viewNormal
-                                                [ Element.Events.onClick (CloseOverlay |> msgMapper)
-                                                ]
-                                            |> Element.inFront
+                    _ ->
+                        Nothing
+            , deck = model.game.deck
+            }
+            model.game.board
+            |> Layout.el Layout.centered
+      , View.Deck.view model.game.deck
+      ]
+        |> Layout.column
+            [ Layout.gap Config.bigSpace
+            , Html.Attributes.style "padding" (String.fromFloat Config.space ++ "px")
+            ]
+    , model.overlay
+        |> Maybe.map
+            (\overlay ->
+                case overlay of
+                    CardDetail cardDetail ->
+                        View.Overlay.cardDetail cardDetail.card
+                            |> Shade.normal
+                                (Layout.asButton
+                                    { onPress = CloseOverlay |> msgMapper |> Just
+                                    , label = "Dismiss"
+                                    }
+                                )
 
-                                    CardSelector _ ->
-                                        []
-                                            |> Shade.viewTransparent
-                                                [ Element.Events.onClick (CloseOverlay |> msgMapper)
-                                                ]
-                                            |> Element.inFront
+                    CardSelector _ ->
+                        Layout.none
+                            |> Shade.transparent
+                                (Layout.asButton
+                                    { onPress = CloseOverlay |> msgMapper |> Just
+                                    , label = "Dismiss"
+                                    }
+                                )
 
-                                    NewCardPicker list ->
-                                        list
-                                            |> View.Overlay.newCardPicker { select = PickCardToAdd >> msgMapper }
-                                            |> List.singleton
-                                            |> Shade.viewNormal []
-                                            |> Element.inFront
-                            )
-                        |> Maybe.map List.singleton
-                        |> Maybe.withDefault []
-                   )
+                    NewCardPicker list ->
+                        list
+                            |> View.Overlay.newCardPicker { select = PickCardToAdd >> msgMapper }
+                            |> Shade.normal []
             )
+        |> Maybe.withDefault Layout.none
+    ]
+        |> Html.div [ Html.Attributes.style "position" "relative" ]
+        |> Element.html
