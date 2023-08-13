@@ -5,6 +5,7 @@ import Data.Board as Board
 import Data.Card as CellType exposing (Card(..))
 import Data.Deck as Deck exposing (Selected(..))
 import Data.Game as Game exposing (EndCondition(..), Game)
+import Dict exposing (Dict)
 import Element exposing (Element)
 import Element.Events
 import Framework
@@ -36,7 +37,7 @@ type Overlay
 type alias State =
     { game : Game
     , selected : Maybe Selected
-    , collection : Set String
+    , collection : Dict String Card
     , viewCollection : Bool
     , viewedCard : Maybe Card
     , overlay : Maybe Overlay
@@ -79,7 +80,7 @@ init : TransitionData -> ( Model, Cmd Msg )
 init { game, seed } =
     ( { game = game
       , selected = Nothing
-      , collection = Set.empty
+      , collection = Dict.empty
       , viewCollection = False
       , viewedCard = Nothing
       , overlay = Nothing
@@ -121,6 +122,19 @@ play ({ game } as state) =
         )
 
 
+openNewCardPicker : Model -> Generator Model
+openNewCardPicker model =
+    model.collection
+        |> Dict.values
+        |> Random.List.choices 2
+        |> Random.map
+            (\( list, _ ) ->
+                { model
+                    | overlay = NewCardPicker list |> Just
+                }
+            )
+
+
 playFirst : ( Int, Int ) -> Model -> Action
 playFirst position ({ game } as model) =
     let
@@ -142,15 +156,7 @@ playFirst position ({ game } as model) =
                 |> Random.constant
 
         Nothing ->
-            CellType.list
-                |> Random.List.choices 2
-                |> Random.map
-                    (\( list, _ ) ->
-                        { model
-                            | game = { game | board = board }
-                            , overlay = NewCardPicker list |> Just
-                        }
-                    )
+            openNewCardPicker { model | game = { game | board = board } }
     )
         |> apply model.seed
         |> play

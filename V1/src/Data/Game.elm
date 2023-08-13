@@ -4,9 +4,9 @@ import Automata
 import Data.Board exposing (Board, columns, rows)
 import Data.Card as CellType exposing (Card(..))
 import Data.Deck as Deck exposing (Deck, Selected(..))
+import Dict exposing (Dict)
 import Grid.Bordered as Grid
 import Random exposing (Generator)
-import Set exposing (Set)
 
 
 type EndCondition
@@ -29,15 +29,15 @@ addCardAndShuffle card game =
         |> Random.map (\deck -> { game | deck = deck })
 
 
-occuringTypes : Board -> Set String
+occuringTypes : Board -> Dict String Card
 occuringTypes board =
     board
         |> Grid.values
-        |> List.map CellType.toString
-        |> Set.fromList
+        |> List.map (\card -> ( CellType.toString card, card ))
+        |> Dict.fromList
 
 
-step : Set String -> Game -> ( Game, Set String )
+step : Dict String Card -> Game -> ( Game, Dict String Card )
 step set ({ score } as game) =
     let
         board : Board
@@ -49,7 +49,7 @@ step set ({ score } as game) =
         | board = board
         , score = score + 1
       }
-    , set |> Set.union (occuringTypes board)
+    , set |> Dict.union (occuringTypes board)
     )
 
 

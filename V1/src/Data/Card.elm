@@ -11,9 +11,10 @@ type Card
     = Water
     | Plant
     | Cactus
-    | Wood
+    | Tree
     | Stone
     | Worm
+    | Bird
     | Lake
     | Fire
     | Mountain
@@ -28,7 +29,7 @@ type Card
 list : List Card
 list =
     --Also works as execution order for conflicting rules
-    [ Snow, Fire, Glacier, Volcano, Mountain, Evergreen, Ice, Lake, Wood, Weed, Water, Plant, Cactus, Stone, Worm ]
+    [ Snow, Fire, Glacier, Volcano, Mountain, Evergreen, Ice, Lake, Tree, Weed, Water, Plant, Cactus, Stone, Worm, Bird ]
 
 
 deck : List Card
@@ -36,9 +37,8 @@ deck =
     [ Plant
     , Plant
     , Plant
-    , Water
     , Stone
-    , Fire
+    , Stone
     ]
 
 
@@ -55,7 +55,7 @@ toString cellType =
             Cactus ->
                 '🌵'
 
-            Wood ->
+            Tree ->
                 '🌳'
 
             Stone ->
@@ -63,6 +63,9 @@ toString cellType =
 
             Worm ->
                 '🪱'
+
+            Bird ->
+                '🦉'
 
             Lake ->
                 '🌊'
@@ -104,7 +107,7 @@ name cellType =
         Cactus ->
             "Dead Leafs"
 
-        Wood ->
+        Tree ->
             "Wood"
 
         Stone ->
@@ -112,6 +115,9 @@ name cellType =
 
         Worm ->
             "Worm"
+
+        Bird ->
+            "Bird"
 
         Lake ->
             "Lake"

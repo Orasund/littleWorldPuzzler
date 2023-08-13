@@ -14,6 +14,7 @@ type RuleType
     | Spawns Card
     | Disapears
     | Transforms { by : List Card, to : Card }
+    | Combines3 { by : Card, to : Card }
 
 
 rule : { from : Maybe Card, to : Maybe Card } -> List ( Int, Maybe Card ) -> Rule Card
@@ -48,6 +49,9 @@ intoRule ruleType =
         Transforms { by, to } ->
             \from -> rule { from = Just from, to = Just to } (by |> List.map (\b -> ( 1, Just b )))
 
+        Combines3 { by, to } ->
+            \from -> rule { from = Just from, to = Just to } [ ( 2, Just by ) ]
+
 
 rules : Card -> List (Rule Card)
 rules cellType =
@@ -59,28 +63,38 @@ rules cellType =
 
         Plant ->
             [ Transforms { by = [ Worm ], to = Worm }
-            , Transforms { by = [ Water ], to = Wood }
+
+            --, Transforms { by = [ Water ], to = Tree }
+            --, Combines3 { by = Plant, to = Tree }
             ]
 
         Cactus ->
             []
 
-        Wood ->
+        Tree ->
             [ TurnsInto Fire
-            , CombinesInto Evergreen
-            , Surrounds Weed
+            , Transforms { by = [ Worm ], to = Bird }
             ]
 
         Stone ->
-            [ Transforms { by = [ Water, Plant ], to = Worm } ]
+            [ -- Transforms { by = [ Water, Plant ], to = Worm }
+              --Transforms { by = [ Tree ], to = Worm }
+              --   Combines3 { by = Plant, to = Worm }
+              Combines3 { by = Stone, to = Worm }
+            ]
 
         Worm ->
-            [ KilledBy Plant ]
+            [ KilledBy Plant
+            , TurnsInto Bird
+            ]
+
+        Bird ->
+            [ KilledBy Worm ]
 
         Lake ->
             [ KilledBy2 Fire
             , TurnsInto Ice
-            , Spawns Wood
+            , Spawns Tree
             ]
 
         Fire ->
