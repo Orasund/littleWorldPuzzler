@@ -32,17 +32,7 @@ type alias Deck =
 
 generator : Generator Deck
 generator =
-    [ Wood
-    , Wood
-    , Wood
-    , Wood
-    , Lake
-    , Lake
-    , Lake
-    , Lake
-    , Stone
-    , Fire
-    ]
+    Data.Card.deck
         |> fromList
         |> shuffle
 

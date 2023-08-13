@@ -9,14 +9,12 @@ import Element exposing (Element)
 import Element.Events
 import Framework
 import Grid.Bordered as Grid
-import Http exposing (Error(..))
 import Process
 import Random exposing (Generator, Seed)
 import Random.List
 import Set exposing (Set)
 import State.Finished as FinishedState
 import Task
-import UndoList exposing (UndoList)
 import View.Game as GameView
 import View.Header as HeaderView
 import View.Overlay
@@ -38,7 +36,6 @@ type Overlay
 type alias State =
     { game : Game
     , selected : Maybe Selected
-    , history : UndoList Game
     , collection : Set String
     , viewCollection : Bool
     , viewedCard : Maybe Card
@@ -56,8 +53,6 @@ type Msg
     = PositionSelected ( Int, Int )
     | PlaceCard ( Int, Int ) Selected
     | CardPlaced
-    | Undo
-    | Redo
     | PageChangeRequested
     | CardSelected Card
     | CloseOverlay
@@ -84,7 +79,6 @@ init : TransitionData -> ( Model, Cmd Msg )
 init { game, seed } =
     ( { game = game
       , selected = Nothing
-      , history = UndoList.fresh game
       , collection = Set.empty
       , viewCollection = False
       , viewedCard = Nothing
@@ -112,7 +106,7 @@ apply seed generator =
 
 
 play : Model -> Action
-play ({ game, history } as state) =
+play ({ game } as state) =
     let
         seconds : Float
         seconds =
@@ -122,7 +116,6 @@ play ({ game, history } as state) =
         ( { state
             | game = game
             , selected = Nothing
-            , history = history |> UndoList.new game
           }
         , Task.perform (always CardPlaced) <| Process.sleep (0.1 * seconds)
         )
@@ -192,7 +185,7 @@ placeCard position selected ({ game } as model) =
 
 
 update : Msg -> Model -> Action
-update msg (({ history, selected, viewCollection, collection } as state) as model) =
+update msg (({ selected, viewCollection, collection } as state) as model) =
     let
         defaultCase : Action
         defaultCase =
@@ -234,59 +227,20 @@ update msg (({ history, selected, viewCollection, collection } as state) as mode
             let
                 ( newGame, newCollection ) =
                     model.game |> Game.step collection
-
-                newHistory : UndoList Game
-                newHistory =
-                    history |> UndoList.new newGame
             in
             if newGame.board |> Grid.emptyPositions |> (==) [] then
                 Action.transitioning
                     { game = newGame
-                    , history = newHistory
-                    , challenge = False
                     }
 
             else
                 Action.updating
                     ( { state
                         | game = newGame
-                        , history = newHistory
                         , collection = newCollection
                       }
                     , Cmd.none
                     )
-
-        Redo ->
-            let
-                newHistory : UndoList Game
-                newHistory =
-                    history
-                        |> UndoList.redo
-                        |> UndoList.redo
-            in
-            Action.updating
-                ( { state
-                    | history = newHistory
-                    , game = newHistory |> .present
-                  }
-                , Cmd.none
-                )
-
-        Undo ->
-            let
-                newHistory : UndoList Game
-                newHistory =
-                    history
-                        |> UndoList.undo
-                        |> UndoList.undo
-            in
-            Action.updating
-                ( { state
-                    | history = newHistory
-                    , game = newHistory |> .present
-                  }
-                , Cmd.none
-                )
 
         PageChangeRequested ->
             Action.updating

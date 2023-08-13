@@ -13,6 +13,7 @@ type RuleType
     | KilledBy2 Card
     | Spawns Card
     | Disapears
+    | Transforms { by : List Card, to : Card }
 
 
 rule : { from : Maybe Card, to : Maybe Card } -> List ( Int, Maybe Card ) -> Rule Card
@@ -44,15 +45,37 @@ intoRule ruleType =
         Disapears ->
             \from -> rule { from = Just from, to = Nothing } []
 
+        Transforms { by, to } ->
+            \from -> rule { from = Just from, to = Just to } (by |> List.map (\b -> ( 1, Just b )))
+
 
 rules : Card -> List (Rule Card)
 rules cellType =
     (case cellType of
+        Water ->
+            [ Disapears
+            , Surrounds Lake
+            ]
+
+        Plant ->
+            [ Transforms { by = [ Worm ], to = Worm }
+            , Transforms { by = [ Water ], to = Wood }
+            ]
+
+        Cactus ->
+            []
+
         Wood ->
             [ TurnsInto Fire
             , CombinesInto Evergreen
             , Surrounds Weed
             ]
+
+        Stone ->
+            [ Transforms { by = [ Water, Plant ], to = Worm } ]
+
+        Worm ->
+            [ KilledBy Plant ]
 
         Lake ->
             [ KilledBy2 Fire
@@ -65,7 +88,7 @@ rules cellType =
             , Surrounds Volcano
             ]
 
-        Stone ->
+        Mountain ->
             [ CombinesInto Glacier
             , KilledBy Glacier
             ]

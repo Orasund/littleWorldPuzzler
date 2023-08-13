@@ -1,5 +1,6 @@
 module Data.Card exposing
     ( Card(..)
+    , deck
     , list
     , name
     , toString
@@ -7,10 +8,15 @@ module Data.Card exposing
 
 
 type Card
-    = Wood
+    = Water
+    | Plant
+    | Cactus
+    | Wood
+    | Stone
+    | Worm
     | Lake
     | Fire
-    | Stone
+    | Mountain
     | Volcano
     | Glacier
     | Ice
@@ -21,15 +27,42 @@ type Card
 
 list : List Card
 list =
-    [ Snow, Fire, Glacier, Volcano, Stone, Evergreen, Ice, Lake, Wood, Weed ]
+    --Also works as execution order for conflicting rules
+    [ Snow, Fire, Glacier, Volcano, Mountain, Evergreen, Ice, Lake, Wood, Weed, Water, Plant, Cactus, Stone, Worm ]
+
+
+deck : List Card
+deck =
+    [ Plant
+    , Plant
+    , Plant
+    , Water
+    , Stone
+    , Fire
+    ]
 
 
 toString : Card -> String
 toString cellType =
     String.fromChar <|
         case cellType of
+            Water ->
+                '💧'
+
+            Plant ->
+                '🌱'
+
+            Cactus ->
+                '🌵'
+
             Wood ->
                 '🌳'
+
+            Stone ->
+                '🪨'
+
+            Worm ->
+                '🪱'
 
             Lake ->
                 '🌊'
@@ -37,7 +70,7 @@ toString cellType =
             Fire ->
                 '🔥'
 
-            Stone ->
+            Mountain ->
                 '⛰'
 
             Volcano ->
@@ -62,16 +95,31 @@ toString cellType =
 name : Card -> String
 name cellType =
     case cellType of
+        Water ->
+            "Water"
+
+        Plant ->
+            "Plant"
+
+        Cactus ->
+            "Dead Leafs"
+
         Wood ->
             "Wood"
 
+        Stone ->
+            "Stone"
+
+        Worm ->
+            "Worm"
+
         Lake ->
-            "Water"
+            "Lake"
 
         Fire ->
             "Fire"
 
-        Stone ->
+        Mountain ->
             "Stone"
 
         Volcano ->

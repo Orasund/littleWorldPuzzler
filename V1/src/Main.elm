@@ -2,7 +2,6 @@ module Main exposing (main)
 
 import Action
 import Browser
-import Browser.Dom as Dom
 import Element exposing (Element, Option)
 import Element.Background as Background
 import Element.Font as Font
@@ -81,18 +80,18 @@ init _ =
     , Cmd.batch
         [ Random.generate (PreparingSpecific << PreparingState.GotSeed)
             Random.independentSeed
-        , Task.perform
-            (\_ ->
-                { width = width, height = height }
-                    --{ width = viewport.width, height = viewport.height }
-                    |> (\dim ->
-                            Resized
-                                { scale = calcScale dim
-                                , portraitMode = calcPortraitMode dim
-                                }
-                       )
-            )
-            Dom.getViewport
+        , Task.succeed
+            ()
+            |> Task.perform
+                (\() ->
+                    { width = width, height = height }
+                        |> (\dim ->
+                                Resized
+                                    { scale = calcScale dim
+                                    , portraitMode = calcPortraitMode dim
+                                    }
+                           )
+                )
         ]
     )
 

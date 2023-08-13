@@ -8,7 +8,6 @@ import Framework
 import Framework.Grid as Grid
 import Random exposing (Generator, Seed)
 import State.Playing as PlayingState
-import Time exposing (Month(..))
 import View.Button
 import View.Game as GameView
 import View.Header as HeaderView

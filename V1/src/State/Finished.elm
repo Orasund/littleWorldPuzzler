@@ -4,11 +4,9 @@ import Data.Game exposing (EndCondition(..), Game)
 import Element exposing (Element)
 import Element.Font as Font
 import Element.Input as Input
-import Firestore exposing (Error(..))
 import Framework
 import Framework.Button as Button
 import Framework.Heading as Heading
-import UndoList exposing (UndoList)
 import View.Game as GameView
 import View.Header as HeaderView
 import View.Shade
@@ -16,8 +14,6 @@ import View.Shade
 
 type alias TransitionData =
     { game : Game
-    , history : UndoList Game
-    , challenge : Bool
     }
 
 
@@ -32,11 +28,9 @@ type alias Msg =
 
 
 init : TransitionData -> ( Model, Cmd Msg )
-init { game, history, challenge } =
+init { game } =
     ( End
         { game = game
-        , history = history
-        , challenge = challenge
         }
     , Cmd.none
     )
@@ -50,8 +44,6 @@ init { game, history, challenge } =
 
 type alias EndState =
     { game : Game
-    , history : UndoList Game
-    , challenge : Bool
     }
 
 
