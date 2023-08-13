@@ -1,7 +1,7 @@
 module Automata.Neighborhood exposing (fromList, fullSymmetry, toList, toString)
 
 import CellAutomata exposing (Neighborhood, RuleExpression(..), Symmetry, anyNeighborhood)
-import Data.CellType as CellType exposing (CellType)
+import Data.Card as CellType exposing (Card)
 import Dict
 
 
@@ -118,7 +118,7 @@ toList neighbors =
             []
 
 
-fullSymmetry : Symmetry CellType
+fullSymmetry : Symmetry Card
 fullSymmetry maybeCellType { north, east, south, west } { from, to, neighbors } =
     let
         dict =
@@ -169,10 +169,10 @@ fullSymmetry maybeCellType { north, east, south, west } { from, to, neighbors } 
         Nothing
 
 
-toString : Neighborhood (RuleExpression (Maybe CellType)) -> String
+toString : Neighborhood (RuleExpression (Maybe Card)) -> String
 toString { north, east, south, west } =
     let
-        expressionToString : RuleExpression (Maybe CellType) -> String
+        expressionToString : RuleExpression (Maybe Card) -> String
         expressionToString direction =
             case direction of
                 Exactly maybeCellType ->

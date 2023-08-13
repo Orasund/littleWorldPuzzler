@@ -1,12 +1,12 @@
-module Data.CellType exposing
-    ( CellType(..)
+module Data.Card exposing
+    ( Card(..)
     , list
     , name
     , toString
     )
 
 
-type CellType
+type Card
     = Wood
     | Water
     | Fire
@@ -19,12 +19,12 @@ type CellType
     | Weed
 
 
-list : List CellType
+list : List Card
 list =
     [ Snow, Fire, Glacier, Volcano, Stone, Evergreen, Ice, Water, Wood, Weed ]
 
 
-toString : CellType -> String
+toString : Card -> String
 toString cellType =
     String.fromChar <|
         case cellType of
@@ -59,7 +59,7 @@ toString cellType =
                 '🌿'
 
 
-name : CellType -> String
+name : Card -> String
 name cellType =
     case cellType of
         Wood ->

@@ -1,6 +1,6 @@
 module View.Game exposing (view, viewFinished, viewHome, viewReplay)
 
-import Data.CellType exposing (CellType(..))
+import Data.Card exposing (Card(..))
 import Data.Deck exposing (Selected(..))
 import Data.Game exposing (EndCondition(..), Game)
 import Element exposing (Element)

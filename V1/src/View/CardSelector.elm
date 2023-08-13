@@ -1,7 +1,7 @@
 module View.CardSelector exposing (..)
 
 import Config
-import Data.CellType as CellType exposing (CellType)
+import Data.Card as CellType exposing (CellType)
 import Data.Deck exposing (Selected)
 import Html exposing (Attribute, Html)
 import Html.Attributes

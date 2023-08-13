@@ -2,7 +2,7 @@ module Data.Game exposing (EndCondition(..), Game, addCardAndShuffle, generator,
 
 import Automata
 import Data.Board exposing (Board, columns, rows)
-import Data.CellType as CellType exposing (CellType(..))
+import Data.Card as CellType exposing (Card(..))
 import Data.Deck as Deck exposing (Deck, Selected(..))
 import Grid.Bordered as Grid
 import Random exposing (Generator)
@@ -21,7 +21,7 @@ type alias Game =
     }
 
 
-addCardAndShuffle : CellType -> Game -> Generator Game
+addCardAndShuffle : Card -> Game -> Generator Game
 addCardAndShuffle card game =
     game.deck
         |> Deck.addToDiscard card

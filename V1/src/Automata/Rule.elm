@@ -2,25 +2,25 @@ module Automata.Rule exposing (rules)
 
 import Automata.Neighborhood as Neighborhood
 import CellAutomata exposing (Rule)
-import Data.CellType exposing (CellType(..))
+import Data.Card exposing (Card(..))
 
 
 type RuleType
-    = Surrounds CellType
-    | CombinesInto CellType
-    | TurnsInto CellType
-    | KilledBy CellType
-    | KilledBy2 CellType
-    | Spawns CellType
+    = Surrounds Card
+    | CombinesInto Card
+    | TurnsInto Card
+    | KilledBy Card
+    | KilledBy2 Card
+    | Spawns Card
     | Disapears
 
 
-rule : { from : Maybe CellType, to : Maybe CellType } -> List ( Int, Maybe CellType ) -> Rule CellType
+rule : { from : Maybe Card, to : Maybe Card } -> List ( Int, Maybe Card ) -> Rule Card
 rule { from, to } list =
     { from = from, to = to, neighbors = Neighborhood.fromList list }
 
 
-intoRule : RuleType -> (CellType -> Rule CellType)
+intoRule : RuleType -> (Card -> Rule Card)
 intoRule ruleType =
     case ruleType of
         Surrounds to ->
@@ -45,7 +45,7 @@ intoRule ruleType =
             \from -> rule { from = Just from, to = Nothing } []
 
 
-rules : CellType -> List (Rule CellType)
+rules : Card -> List (Rule Card)
 rules cellType =
     (case cellType of
         Wood ->

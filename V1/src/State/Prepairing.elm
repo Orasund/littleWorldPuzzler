@@ -1,7 +1,7 @@
 module State.Prepairing exposing (Model, Msg(..), update)
 
 import Action
-import Data.CellType exposing (CellType(..))
+import Data.Card exposing (CellType(..))
 import Data.Deck exposing (Selected(..))
 import Random exposing (Seed)
 

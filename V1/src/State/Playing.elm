@@ -1,9 +1,8 @@
 module State.Playing exposing (Model, Msg, TransitionData, init, update, view)
 
 import Action
-import Config
 import Data.Board as Board
-import Data.CellType as CellType exposing (CellType(..))
+import Data.Card as CellType exposing (Card(..))
 import Data.Deck as Deck exposing (Selected(..))
 import Data.Game as Game exposing (EndCondition(..), Game)
 import Element exposing (Element)
@@ -11,17 +10,13 @@ import Element.Events
 import Framework
 import Grid.Bordered as Grid
 import Http exposing (Error(..))
-import Layout
 import Process
 import Random exposing (Generator, Seed)
 import Random.List
 import Set exposing (Set)
 import State.Finished as FinishedState
-import Svg.Attributes
 import Task
 import UndoList exposing (UndoList)
-import View exposing (card)
-import View.CellType
 import View.Game as GameView
 import View.Header as HeaderView
 import View.Overlay
@@ -35,9 +30,9 @@ import View.Shade as Shade
 
 
 type Overlay
-    = CardDetail { pos : ( Int, Int ), card : CellType }
+    = CardDetail { pos : ( Int, Int ), card : Card }
     | CardSelector ( Int, Int )
-    | NewCardPicker (List CellType)
+    | NewCardPicker (List Card)
 
 
 type alias State =
@@ -46,7 +41,7 @@ type alias State =
     , history : UndoList Game
     , collection : Set String
     , viewCollection : Bool
-    , viewedCard : Maybe CellType
+    , viewedCard : Maybe Card
     , overlay : Maybe Overlay
     , initialSeed : Seed
     , seed : Seed
@@ -64,9 +59,9 @@ type Msg
     | Undo
     | Redo
     | PageChangeRequested
-    | CardSelected CellType
+    | CardSelected Card
     | CloseOverlay
-    | PickCardToAdd CellType
+    | PickCardToAdd Card
 
 
 type alias TransitionData =
@@ -168,7 +163,7 @@ playFirst position ({ game } as model) =
         |> play
 
 
-playSecond : ( Int, Int ) -> CellType -> Model -> Action
+playSecond : ( Int, Int ) -> Card -> Model -> Action
 playSecond position cellType ({ game } as state) =
     { state
         | game =

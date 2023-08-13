@@ -5,7 +5,7 @@ module Data.Board exposing
     , rows
     )
 
-import Data.CellType exposing (CellType(..))
+import Data.Card exposing (Card(..))
 import Grid.Bordered as Grid exposing (Grid)
 
 
@@ -20,10 +20,10 @@ rows =
 
 
 type alias Board =
-    Grid CellType
+    Grid Card
 
 
-place : ( Int, Int ) -> CellType -> Board -> Board
+place : ( Int, Int ) -> Card -> Board -> Board
 place position cellType =
     Grid.ignoringErrors <|
         Grid.insert position cellType

@@ -13,7 +13,7 @@ module Data.Deck exposing
     , shuffle
     )
 
-import Data.CellType exposing (CellType(..))
+import Data.Card exposing (Card(..))
 import Random exposing (Generator)
 import Random.List as RandomList
 
@@ -24,9 +24,9 @@ type Selected
 
 
 type alias Deck =
-    { remaining : List CellType
-    , current : CellType
-    , played : List CellType
+    { remaining : List Card
+    , current : Card
+    , played : List Card
     }
 
 
@@ -47,7 +47,7 @@ generator =
         |> shuffle
 
 
-fromList : List CellType -> Deck
+fromList : List Card -> Deck
 fromList list =
     case list of
         head :: tail ->
@@ -63,22 +63,22 @@ fromList list =
             }
 
 
-remaining : Deck -> List CellType
+remaining : Deck -> List Card
 remaining =
     .remaining
 
 
-played : Deck -> List CellType
+played : Deck -> List Card
 played =
     .played
 
 
-first : Deck -> CellType
+first : Deck -> Card
 first =
     .current
 
 
-second : Deck -> Maybe CellType
+second : Deck -> Maybe Card
 second deck =
     deck.remaining
         |> List.head
@@ -112,7 +112,7 @@ playSecond deck =
             Nothing
 
 
-addToDiscard : CellType -> Deck -> Deck
+addToDiscard : Card -> Deck -> Deck
 addToDiscard cellType deck =
     { deck | played = cellType :: deck.played }
 

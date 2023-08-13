@@ -3,7 +3,7 @@ module View.CellType exposing (..)
 import Automata.Neighborhood as Neighborhood
 import Automata.Rule as Rule
 import Config
-import Data.CellType as CellType exposing (CellType)
+import Data.Card as CellType exposing (Card)
 import Html exposing (Attribute, Html)
 import Html.Attributes
 import Layout
@@ -11,7 +11,7 @@ import View
 import View.Color
 
 
-asBigCard : List (Attribute msg) -> CellType -> Html msg
+asBigCard : List (Attribute msg) -> Card -> Html msg
 asBigCard attrs cellType =
     let
         width =
@@ -37,7 +37,7 @@ asBigCard attrs cellType =
             )
 
 
-asSmallCard : List (Attribute msg) -> CellType -> Html msg
+asSmallCard : List (Attribute msg) -> Card -> Html msg
 asSmallCard attrs cellType =
     let
         width =
@@ -63,7 +63,7 @@ asSmallCard attrs cellType =
             )
 
 
-asRules : List (Attribute msg) -> CellType -> Html msg
+asRules : List (Attribute msg) -> Card -> Html msg
 asRules attrs cellType =
     cellType
         |> Rule.rules

@@ -1,7 +1,7 @@
 module View.Overlay exposing (..)
 
 import Config
-import Data.CellType as CellType exposing (CellType)
+import Data.Card as CellType exposing (Card)
 import Element exposing (Element)
 import Html.Attributes
 import Layout
@@ -9,7 +9,7 @@ import View.CellType
 import View.Color
 
 
-cardDetail : CellType -> Element msg
+cardDetail : Card -> Element msg
 cardDetail card =
     [ card
         |> View.CellType.asBigCard []
@@ -20,7 +20,7 @@ cardDetail card =
         |> Element.el [ Element.centerX ]
 
 
-newCardPicker : { select : CellType -> msg } -> List CellType -> Element msg
+newCardPicker : { select : Card -> msg } -> List Card -> Element msg
 newCardPicker args list =
     [ "Pick one card to add to your deck"
         |> Layout.text [ Html.Attributes.style "color" View.Color.background ]

@@ -1,6 +1,6 @@
 module View.Board exposing (toHtml, toHtmlWithoutInteraction)
 
-import Data.CellType as CellType exposing (CellType)
+import Data.Card as CellType exposing (Card)
 import Data.Deck as Deck exposing (Deck, Selected(..))
 import Element exposing (Attribute, Element)
 import Element.Border as Border
@@ -13,7 +13,7 @@ import Layout
 import View.CardSelector
 
 
-viewCell : List (Attribute msg) -> { scale : Float, position : ( Int, Int ), onPress : Maybe (( Int, Int ) -> msg) } -> Maybe CellType -> Element msg
+viewCell : List (Attribute msg) -> { scale : Float, position : ( Int, Int ), onPress : Maybe (( Int, Int ) -> msg) } -> Maybe Card -> Element msg
 viewCell attrs args maybeCellType =
     Element.el
         ([ Element.centerX
@@ -46,7 +46,7 @@ viewCell attrs args maybeCellType =
                 )
 
 
-toHtmlWithoutInteraction : { scale : Float } -> Grid CellType -> Element msg
+toHtmlWithoutInteraction : { scale : Float } -> Grid Card -> Element msg
 toHtmlWithoutInteraction args =
     view
         { scale = args.scale
@@ -64,7 +64,7 @@ toHtml :
     , positionSelected : Maybe ( Int, Int )
     , deck : Deck
     }
-    -> Grid CellType
+    -> Grid Card
     -> Element msg
 toHtml args =
     view
@@ -83,7 +83,7 @@ view :
     , positionSelected : Maybe ( Int, Int )
     , deck : Maybe Deck
     }
-    -> Grid CellType
+    -> Grid Card
     -> Element msg
 view args grid =
     Element.column

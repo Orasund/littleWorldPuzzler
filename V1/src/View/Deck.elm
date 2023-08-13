@@ -1,13 +1,10 @@
 module View.Deck exposing (view)
 
-import Card
 import Config
-import Data.CellType as CellType exposing (CellType(..))
+import Data.Card as CellType exposing (Card(..))
 import Data.Deck as Deck exposing (Deck, Selected(..))
 import Element exposing (Attribute, Element)
 import Element.Font as Font
-import Html exposing (Html)
-import Html.Attributes
 import Layout
 import View
 import View.CellType
