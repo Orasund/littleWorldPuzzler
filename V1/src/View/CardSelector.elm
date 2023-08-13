@@ -1,16 +1,14 @@
 module View.CardSelector exposing (..)
 
 import Config
-import Data.Card as CellType exposing (CellType)
+import Data.Card as CellType exposing (Card)
 import Data.Deck exposing (Selected)
-import Html exposing (Attribute, Html)
-import Html.Attributes
+import Html exposing (Html)
 import Layout
 import View.Button
-import View.Color as Color
 
 
-toHtml : { onSelect : Selected -> Maybe msg } -> List ( Selected, CellType ) -> Html msg
+toHtml : { onSelect : Selected -> Maybe msg } -> List ( Selected, Card ) -> Html msg
 toHtml args list =
     list
         |> List.map

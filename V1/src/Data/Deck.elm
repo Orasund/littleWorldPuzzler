@@ -36,10 +36,10 @@ generator =
     , Wood
     , Wood
     , Wood
-    , Water
-    , Water
-    , Water
-    , Water
+    , Lake
+    , Lake
+    , Lake
+    , Lake
     , Stone
     , Fire
     ]

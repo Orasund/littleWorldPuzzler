@@ -8,7 +8,7 @@ module Data.Card exposing
 
 type Card
     = Wood
-    | Water
+    | Lake
     | Fire
     | Stone
     | Volcano
@@ -21,7 +21,7 @@ type Card
 
 list : List Card
 list =
-    [ Snow, Fire, Glacier, Volcano, Stone, Evergreen, Ice, Water, Wood, Weed ]
+    [ Snow, Fire, Glacier, Volcano, Stone, Evergreen, Ice, Lake, Wood, Weed ]
 
 
 toString : Card -> String
@@ -31,7 +31,7 @@ toString cellType =
             Wood ->
                 '🌳'
 
-            Water ->
+            Lake ->
                 '🌊'
 
             Fire ->
@@ -65,7 +65,7 @@ name cellType =
         Wood ->
             "Wood"
 
-        Water ->
+        Lake ->
             "Water"
 
         Fire ->

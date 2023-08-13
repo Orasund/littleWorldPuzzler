@@ -54,7 +54,7 @@ rules cellType =
             , Surrounds Weed
             ]
 
-        Water ->
+        Lake ->
             [ KilledBy2 Fire
             , TurnsInto Ice
             , Spawns Wood
