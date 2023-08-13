@@ -1,16 +1,16 @@
-module  Automata exposing (step)
+module Automata exposing (step)
 
+import Automata.Neighborhood as Neighborhood
+import Automata.Rule as Rule
 import CellAutomata exposing (Automata, Order, Rule)
+import Data.CellType as CellType exposing (CellType)
 import Dict exposing (Dict)
-import  Automata.Neighborhood as Neighborhood
-import  Automata.Rule as Rule
-import  Data.CellType as CellType exposing (CellType)
 
 
-order : Order CellType Int
+order : Order CellType String
 order =
-    Maybe.map CellType.toInt
-        >> Maybe.withDefault 0
+    Maybe.map CellType.name
+        >> Maybe.withDefault ""
 
 
 rules : List (Rule CellType)
@@ -20,7 +20,7 @@ rules =
         |> List.concat
 
 
-automata : Automata CellType Int
+automata : Automata CellType String
 automata =
     CellAutomata.automata
         Neighborhood.fullSymmetry

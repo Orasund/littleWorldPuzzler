@@ -1,11 +1,10 @@
-module  Data.Game exposing (EndCondition(..), Game, generator, json, step)
+module Data.Game exposing (EndCondition(..), Game, generator, step)
 
+import Automata
+import Data.Board exposing (Board, columns, rows)
+import Data.CellType as CellType exposing (CellType(..))
+import Data.Deck as Deck exposing (Deck, Selected(..))
 import Grid.Bordered as Grid
-import Jsonstore exposing (Json)
-import  Automata as Automata
-import  Data.Board as Board exposing (Board, columns, rows)
-import  Data.CellType as CellType exposing (CellType(..))
-import  Data.Deck as Deck exposing (Deck, Selected(..))
 import Random exposing (Generator)
 import Set exposing (Set)
 
@@ -25,7 +24,7 @@ type alias Game =
 occuringTypes : Board -> Set String
 occuringTypes board =
     board
-        |> Board.values
+        |> Grid.values
         |> List.map CellType.toString
         |> Set.fromList
 
@@ -57,18 +56,3 @@ generator =
                 , score = 0
                 }
             )
-
-
-
-{------------------------
-   Json
-------------------------}
-
-
-json : Json Game
-json =
-    Jsonstore.object (\board -> Game (board |> Board.fromList))
-        |> Jsonstore.withList "board" Board.jsonTuple (.board >> Board.toList)
-        |> Jsonstore.with "deck" Deck.json .deck
-        |> Jsonstore.with "score" Jsonstore.int .score
-        |> Jsonstore.toJson

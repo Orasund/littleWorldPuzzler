@@ -18,9 +18,7 @@ import Set exposing (Set)
 import State.Finished as FinishedState
 import Task
 import UndoList exposing (UndoList)
-import View.Button
 import View.CellType
-import View.Collection as CollectionView
 import View.Game as GameView
 import View.Header as HeaderView
 import View.Shade as Shade
@@ -366,29 +364,22 @@ view scale restartMsg msgMapper ( model, _ ) =
     [ HeaderView.view
         restartMsg
         model.game.score
-    , if model.viewCollection then
-        CollectionView.view scale
-            (msgMapper << CardSelected)
-            model.collection
-            model.viewedCard
+    , GameView.view
+        { scale = scale
+        , selected = model.selected
+        , sort = True
+        , positionSelected =
+            case model.overlay of
+                Just (CardSelector position) ->
+                    Just position
 
-      else
-        GameView.view
-            { scale = scale
-            , selected = model.selected
-            , sort = True
-            , positionSelected =
-                case model.overlay of
-                    Just (CardSelector position) ->
-                        Just position
-
-                    _ ->
-                        Nothing
-            , positionSelectedMsg = msgMapper << PositionSelected
-            , selectedMsg = msgMapper << Selected
-            , placeCard = \a b -> PlaceCard a b |> msgMapper
-            }
-            model.game
+                _ ->
+                    Nothing
+        , positionSelectedMsg = msgMapper << PositionSelected
+        , selectedMsg = msgMapper << Selected
+        , placeCard = \a b -> PlaceCard a b |> msgMapper
+        }
+        model.game
     ]
         |> Element.column
             (Framework.container

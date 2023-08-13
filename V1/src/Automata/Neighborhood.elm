@@ -1,8 +1,8 @@
-module  Automata.Neighborhood exposing (fromList, fullSymmetry, toList, toString)
+module Automata.Neighborhood exposing (fromList, fullSymmetry, toList, toString)
 
 import CellAutomata exposing (Neighborhood, RuleExpression(..), Symmetry, anyNeighborhood)
+import Data.CellType as CellType exposing (CellType)
 import Dict
-import  Data.CellType as CellType exposing (CellType)
 
 
 setNorth :
@@ -123,7 +123,7 @@ fullSymmetry maybeCellType { north, east, south, west } { from, to, neighbors } 
     let
         dict =
             [ north, east, south, west ]
-                |> List.map (Maybe.map CellType.toInt >> Maybe.withDefault 0)
+                |> List.map (Maybe.map CellType.name >> Maybe.withDefault "")
                 |> List.sort
                 |> List.foldr
                     (\elem list ->
@@ -149,7 +149,7 @@ fullSymmetry maybeCellType { north, east, south, west } { from, to, neighbors } 
                     |> List.filter
                         (\( minN, maybeElem ) ->
                             dict
-                                |> Dict.get (maybeElem |> Maybe.map CellType.toInt |> Maybe.withDefault 0)
+                                |> Dict.get (maybeElem |> Maybe.map CellType.name |> Maybe.withDefault "")
                                 |> Maybe.andThen
                                     (\n ->
                                         if n >= minN then

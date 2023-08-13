@@ -51,9 +51,7 @@ rules cellType =
         Wood ->
             [ TurnsInto Fire
             , CombinesInto Evergreen
-
-            --, rule { from = Just Wood, to = Just Evergreen } [ ( 1, Just Ice ) ]
-            , Surrounds Weed --new
+            , Surrounds Weed
             ]
 
         Water ->
@@ -63,52 +61,28 @@ rules cellType =
             ]
 
         Fire ->
-            [ {--rule { from = Just Fire, to = Just Volcano } [ ( 3, Just Stone ) ]
-            ,--}
-              --, Fire |> surrounds Desert
-              Disapears
+            [ Disapears
             , Surrounds Volcano
             ]
 
         Stone ->
             [ CombinesInto Glacier
-            , KilledBy Glacier --new
-
-            {--, rule
-                { from = Just Stone, to = Nothing }
-                [ ( 1, Just Volcano ), ( 1, Just Water ) ]--}
+            , KilledBy Glacier
             ]
 
         Volcano ->
-            [ --rule { from = Just Volcano, to = Just Volcano } [ ( 2, Just Stone ) ]
-              --, rule { from = Just Volcano, to = Just Fog } []
-              Disapears
-            , Spawns Fire --Fog
-            ]
-
-        Fog ->
-            [ TurnsInto Water
-            , TurnsInto Fire --new
-
-            --, rule { from = Just Fog, to = Just Fire } [ ( 1, Just Wood ) ]
-            ]
-
-        Desert ->
-            [--Desert |> killedBy2 Water
+            [ Disapears
+            , Spawns Fire
             ]
 
         Glacier ->
-            [ {--rule { from = Just Glacier, to = Just Glacier } [ ( 2, Just Stone ) ]
-            ,--}
-              KilledBy Fire
+            [ KilledBy Fire
             , Spawns Ice
             ]
 
         Ice ->
             [ Disapears
-            , Surrounds Snow --new
-
-            --rule { from = Nothing, to = Just Snow } [ ( 2, Just Ice ) ]
+            , Surrounds Snow
             ]
 
         Snow ->
@@ -120,8 +94,8 @@ rules cellType =
             ]
 
         Weed ->
-            [ TurnsInto Fire --new
-            , Spawns Weed --new
+            [ TurnsInto Fire
+            , Spawns Weed
             ]
     )
         |> List.map (intoRule >> (\f -> f cellType))

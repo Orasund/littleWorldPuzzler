@@ -1,10 +1,9 @@
-module  Data.Deck exposing
+module Data.Deck exposing
     ( Deck
     , Selected(..)
     , first
     , fromList
     , generator
-    , json
     , moveTofirst
     , placeOnDiscard
     , playFirst
@@ -15,9 +14,8 @@ module  Data.Deck exposing
     , shuffle
     )
 
-import Jsonstore exposing (Json)
+import Data.CellType exposing (CellType(..))
 import List.Zipper as Zipper exposing (Zipper)
-import  Data.CellType as CellType exposing (CellType(..))
 import Random exposing (Generator)
 import Random.List as RandomList
 
@@ -134,23 +132,3 @@ shuffle =
     Zipper.toList
         >> RandomList.shuffle
         >> Random.map fromList
-
-
-
-{------------------------
-   Json
-------------------------}
-
-
-json : Json Deck
-json =
-    Jsonstore.object
-        (\remainingD firstD playedD ->
-            Zipper.singleton firstD
-                |> Zipper.mapBefore (always playedD)
-                |> Zipper.mapAfter (always remainingD)
-        )
-        |> Jsonstore.withList "remaining" CellType.json remaining
-        |> Jsonstore.with "first" CellType.json first
-        |> Jsonstore.withList "played" CellType.json played
-        |> Jsonstore.toJson
