@@ -64,8 +64,7 @@
             "turboMaCk/non-empty-list-alias": "1.1.0",
             "turboMaCk/queue": "1.1.0",
             "uncover-co/elm-widgets-alpha": "9.0.0",
-            "waratuman/time-extra": "1.1.0",
-            "wernerdegroot/listzipper": "4.0.0"
+            "waratuman/time-extra": "1.1.0"
         },
         "indirect": {
             "IzumiSy/elm-typed": "4.1.0",

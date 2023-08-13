@@ -12,7 +12,6 @@ viewNormal : List (Attribute msg) -> List (Element msg) -> Element msg
 viewNormal attrs content =
     view
         ([ Background.color <| Element.rgba255 0 0 0 0.7
-         , Font.color <| Element.rgb255 255 255 255
          ]
             ++ attrs
         )
@@ -23,7 +22,6 @@ viewWon : List (Attribute msg) -> List (Element msg) -> Element msg
 viewWon attrs content =
     view
         ([ Background.color <| Element.rgba255 204 166 0 0.7
-         , Font.color <| Element.rgb255 0 0 0
          ]
             ++ attrs
         )
@@ -34,7 +32,6 @@ viewTransparent : List (Attribute msg) -> List (Element msg) -> Element msg
 viewTransparent attrs content =
     view
         ([ Background.color <| Element.rgba 0 0 0 0
-         , Font.color <| Element.rgb255 0 0 0
          ]
             ++ attrs
         )

@@ -1,4 +1,4 @@
-module Data.Game exposing (EndCondition(..), Game, generator, step)
+module Data.Game exposing (EndCondition(..), Game, addCardAndShuffle, generator, step)
 
 import Automata
 import Data.Board exposing (Board, columns, rows)
@@ -19,6 +19,14 @@ type alias Game =
     , deck : Deck
     , score : Int
     }
+
+
+addCardAndShuffle : CellType -> Game -> Generator Game
+addCardAndShuffle card game =
+    game.deck
+        |> Deck.addToDiscard card
+        |> Deck.shuffle
+        |> Random.map (\deck -> { game | deck = deck })
 
 
 occuringTypes : Board -> Set String

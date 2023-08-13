@@ -1,11 +1,10 @@
 module Data.Deck exposing
     ( Deck
     , Selected(..)
+    , addToDiscard
     , first
     , fromList
     , generator
-    , moveTofirst
-    , placeOnDiscard
     , playFirst
     , playSecond
     , played
@@ -15,7 +14,6 @@ module Data.Deck exposing
     )
 
 import Data.CellType exposing (CellType(..))
-import List.Zipper as Zipper exposing (Zipper)
 import Random exposing (Generator)
 import Random.List as RandomList
 
@@ -26,7 +24,10 @@ type Selected
 
 
 type alias Deck =
-    Zipper CellType
+    { remaining : List CellType
+    , current : CellType
+    , played : List CellType
+    }
 
 
 generator : Generator Deck
@@ -47,88 +48,79 @@ generator =
 
 
 fromList : List CellType -> Deck
-fromList =
-    Zipper.fromList
-        >> Zipper.withDefault Wood
+fromList list =
+    case list of
+        head :: tail ->
+            { remaining = tail
+            , current = head
+            , played = []
+            }
+
+        [] ->
+            { remaining = []
+            , current = Wood
+            , played = []
+            }
 
 
 remaining : Deck -> List CellType
 remaining =
-    Zipper.after
+    .remaining
 
 
 played : Deck -> List CellType
 played =
-    Zipper.before
+    .played
 
 
 first : Deck -> CellType
 first =
-    Zipper.current
+    .current
 
 
 second : Deck -> Maybe CellType
-second =
-    Zipper.after
-        >> List.head
+second deck =
+    deck.remaining
+        |> List.head
 
 
-{-| Move the focus to the first element of the list.
--}
-moveTofirst : Zipper a -> Zipper a
-moveTofirst =
-    Zipper.first
-
-
-
-{--moveTofirst : Zipper a -> Zipper a
-moveTofirst ((Zipper ls x rs) as zipper) =
-    case List.reverse ls of
-        [] ->
-            zipper
-
-        y :: ys ->
-            Zipper [] y (List.concat [ ys, [ x ], rs ])--}
-
-
-playFirst : Bool -> Deck -> Generator Deck
-playFirst optionShuffle deck =
-    case deck |> Zipper.after of
-        b :: tail ->
-            deck
-                |> Zipper.mapCurrent (always b)
-                |> Zipper.mapAfter (always tail)
-                |> Random.constant
+playFirst : Deck -> Maybe Deck
+playFirst deck =
+    case deck.remaining of
+        head :: tail ->
+            { current = head
+            , remaining = tail
+            , played = deck.current :: deck.played
+            }
+                |> Just
 
         [] ->
-            generator
-                |> (if optionShuffle then
-                        Random.andThen shuffle
-
-                    else
-                        identity
-                   )
+            Nothing
 
 
-playSecond : Deck -> Deck
+playSecond : Deck -> Maybe Deck
 playSecond deck =
-    case deck |> Zipper.after of
-        _ :: tail ->
-            deck
-                --|> Zipper.mapBefore (\list -> [ b ] |> List.append list)
-                |> Zipper.mapAfter (always tail)
+    case deck.remaining of
+        head :: tail ->
+            { deck
+                | remaining = tail
+                , played = head :: deck.played
+            }
+                |> Just
 
         [] ->
-            deck
+            Nothing
 
 
-placeOnDiscard : CellType -> Deck -> Deck
-placeOnDiscard cellType deck =
-    deck |> Zipper.mapAfter ((::) cellType)
+addToDiscard : CellType -> Deck -> Deck
+addToDiscard cellType deck =
+    { deck | played = cellType :: deck.played }
 
 
 shuffle : Deck -> Generator Deck
-shuffle =
-    Zipper.toList
-        >> RandomList.shuffle
-        >> Random.map fromList
+shuffle deck =
+    deck.current
+        :: deck.remaining
+        ++ deck.played
+        |> RandomList.shuffle
+        |> Random.map fromList

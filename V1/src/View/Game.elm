@@ -18,7 +18,7 @@ viewFinished scale { board, deck } =
     Element.column Grid.simple
         [ BoardView.toHtmlWithoutInteraction { scale = scale }
             board
-        , DeckView.view scale False Nothing Nothing deck
+        , DeckView.view scale deck
         ]
 
 
@@ -55,7 +55,7 @@ viewReplay scale { board, deck } =
     <|
         [ BoardView.toHtmlWithoutInteraction { scale = scale }
             board
-        , DeckView.view scale False Nothing Nothing deck
+        , DeckView.view scale deck
         ]
 
 
@@ -64,18 +64,16 @@ viewHome scale { board, deck } =
     Element.column Grid.simple <|
         [ BoardView.toHtmlWithoutInteraction { scale = scale }
             board
-        , DeckView.view scale False Nothing Nothing deck
+        , DeckView.view scale deck
         ]
 
 
 view :
     { scale : Float
     , selected : Maybe Selected
-    , sort : Bool
     , positionSelected : Maybe ( Int, Int )
     , placeCard : ( Int, Int ) -> Selected -> msg
     , positionSelectedMsg : ( Int, Int ) -> msg
-    , selectedMsg : Selected -> msg
     }
     -> Game
     -> Element msg
@@ -89,5 +87,5 @@ view args { board, deck } =
             , deck = deck
             }
             board
-        , DeckView.view args.scale args.sort (Just args.selectedMsg) args.selected deck
+        , DeckView.view args.scale deck
         ]

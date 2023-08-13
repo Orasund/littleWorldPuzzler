@@ -1,6 +1,15 @@
 module View.Color exposing (..)
 
 
+cardBackground : String
+cardBackground =
+    "color-mix(in lch, " ++ secondary ++ " 10%," ++ background ++ ")"
+
+
+
+---
+
+
 background : String
 background =
     -- White

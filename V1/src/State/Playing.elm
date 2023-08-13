@@ -3,7 +3,7 @@ module State.Playing exposing (Model, Msg, TransitionData, init, update, view)
 import Action
 import Config
 import Data.Board as Board
-import Data.CellType exposing (CellType(..))
+import Data.CellType as CellType exposing (CellType(..))
 import Data.Deck as Deck exposing (Selected(..))
 import Data.Game as Game exposing (EndCondition(..), Game)
 import Element exposing (Element)
@@ -13,14 +13,18 @@ import Grid.Bordered as Grid
 import Http exposing (Error(..))
 import Layout
 import Process
-import Random exposing (Seed)
+import Random exposing (Generator, Seed)
+import Random.List
 import Set exposing (Set)
 import State.Finished as FinishedState
+import Svg.Attributes
 import Task
 import UndoList exposing (UndoList)
+import View exposing (card)
 import View.CellType
 import View.Game as GameView
 import View.Header as HeaderView
+import View.Overlay
 import View.Shade as Shade
 
 
@@ -33,6 +37,7 @@ import View.Shade as Shade
 type Overlay
     = CardDetail { pos : ( Int, Int ), card : CellType }
     | CardSelector ( Int, Int )
+    | NewCardPicker (List CellType)
 
 
 type alias State =
@@ -44,24 +49,24 @@ type alias State =
     , viewedCard : Maybe CellType
     , overlay : Maybe Overlay
     , initialSeed : Seed
+    , seed : Seed
     }
 
 
 type alias Model =
-    ( State, Seed )
+    State
 
 
 type Msg
-    = Selected Selected
-    | PositionSelected ( Int, Int )
+    = PositionSelected ( Int, Int )
     | PlaceCard ( Int, Int ) Selected
-    | PickUp ( Int, Int )
     | CardPlaced
     | Undo
     | Redo
     | PageChangeRequested
     | CardSelected CellType
     | CloseOverlay
+    | PickCardToAdd CellType
 
 
 type alias TransitionData =
@@ -82,17 +87,16 @@ type alias Action =
 
 init : TransitionData -> ( Model, Cmd Msg )
 init { game, seed } =
-    ( ( { game = game
-        , selected = Nothing
-        , history = UndoList.fresh game
-        , collection = Set.empty
-        , viewCollection = False
-        , viewedCard = Nothing
-        , overlay = Nothing
-        , initialSeed = seed
-        }
-      , seed
-      )
+    ( { game = game
+      , selected = Nothing
+      , history = UndoList.fresh game
+      , collection = Set.empty
+      , viewCollection = False
+      , viewedCard = Nothing
+      , overlay = Nothing
+      , initialSeed = seed
+      , seed = seed
+      }
     , Cmd.none
     )
 
@@ -103,94 +107,82 @@ init { game, seed } =
 ----------------------
 
 
+apply : Seed -> Generator State -> Model
+apply seed generator =
+    let
+        ( model, newSeed ) =
+            Random.step generator seed
+    in
+    { model | seed = newSeed }
+
+
 play : Model -> Action
-play ( { game, history } as state, seed ) =
+play ({ game, history } as state) =
     let
         seconds : Float
         seconds =
             1000
     in
     Action.updating
-        ( ( { state
-                | game = game
-                , selected = Nothing
-                , overlay = Nothing
-                , history = history |> UndoList.new game
-            }
-          , seed
-          )
+        ( { state
+            | game = game
+            , selected = Nothing
+            , history = history |> UndoList.new game
+          }
         , Task.perform (always CardPlaced) <| Process.sleep (0.1 * seconds)
         )
 
 
 playFirst : ( Int, Int ) -> Model -> Action
-playFirst position ( { game, initialSeed } as state, seed ) =
-    Random.step
-        (Deck.playFirst True game.deck
-            |> Random.map
-                (\deck ->
-                    { state
-                        | game =
-                            { game
-                                | deck = deck
-                                , board =
-                                    game.board
-                                        |> Board.place position
-                                            (game.deck |> Deck.first)
-                            }
+playFirst position ({ game } as model) =
+    let
+        board =
+            game.board
+                |> Board.place position
+                    (game.deck |> Deck.first)
+    in
+    (case Deck.playFirst game.deck of
+        Just deck ->
+            { model
+                | game =
+                    { game
+                        | deck = deck
+                        , board = board
                     }
-                )
-        )
-        seed
+                , overlay = Nothing
+            }
+                |> Random.constant
+
+        Nothing ->
+            CellType.list
+                |> Random.List.choices 2
+                |> Random.map
+                    (\( list, _ ) ->
+                        { model
+                            | game = { game | board = board }
+                            , overlay = NewCardPicker list |> Just
+                        }
+                    )
+    )
+        |> apply model.seed
         |> play
 
 
 playSecond : ( Int, Int ) -> CellType -> Model -> Action
-playSecond position cellType ( { game } as state, seed ) =
-    play
-        ( { state
-            | game =
-                { game
-                    | deck = game.deck |> Deck.playSecond
-                    , board = game.board |> Board.place position cellType
-                }
-          }
-        , seed
-        )
-
-
-pickUp : CellType -> ( Int, Int ) -> Model -> Action
-pickUp cellType position ( { game, history } as state, seed ) =
-    let
-        seconds : Float
-        seconds =
-            1000
-    in
-    Action.updating
-        ( ( { state
-                | game =
-                    { game
-                        | board =
-                            case game.board |> Grid.remove position of
-                                Ok board ->
-                                    board
-
-                                Err _ ->
-                                    game.board
-                        , deck = game.deck |> Deck.placeOnDiscard cellType
-                        , score = game.score - 2
-                    }
-                , selected = Nothing
-                , history = history |> UndoList.new game
+playSecond position cellType ({ game } as state) =
+    { state
+        | game =
+            { game
+                | deck = game.deck |> Deck.playSecond |> Maybe.withDefault game.deck
+                , board = game.board |> Board.place position cellType
             }
-          , seed
-          )
-        , Task.perform (always CardPlaced) <| Process.sleep (0.1 * seconds)
-        )
+        , overlay = Nothing
+    }
+        |> play
 
 
 placeCard : ( Int, Int ) -> Selected -> Model -> Action
-placeCard position selected (( { game }, _ ) as model) =
+placeCard position selected ({ game } as model) =
     case selected of
         First ->
             playFirst position model
@@ -205,7 +197,7 @@ placeCard position selected (( { game }, _ ) as model) =
 
 
 update : Msg -> Model -> Action
-update msg (( { game, history, selected, viewCollection, collection } as state, seed ) as model) =
+update msg (({ history, selected, viewCollection, collection } as state) as model) =
     let
         defaultCase : Action
         defaultCase =
@@ -213,16 +205,8 @@ update msg (( { game, history, selected, viewCollection, collection } as state, 
                 ( model, Cmd.none )
     in
     case msg of
-        Selected select ->
-            Action.updating
-                ( ( { state | selected = Just select }
-                  , seed
-                  )
-                , Cmd.none
-                )
-
         PositionSelected position ->
-            case game.board |> Grid.get position of
+            case model.game.board |> Grid.get position of
                 Ok Nothing ->
                     case selected of
                         Just s ->
@@ -230,38 +214,31 @@ update msg (( { game, history, selected, viewCollection, collection } as state, 
 
                         Nothing ->
                             Action.updating
-                                ( ( { state
-                                        | overlay =
-                                            position
-                                                |> CardSelector
-                                                |> Just
-                                    }
-                                  , seed
-                                  )
+                                ( { state
+                                    | overlay =
+                                        position
+                                            |> CardSelector
+                                            |> Just
+                                  }
                                 , Cmd.none
                                 )
 
                 Ok (Just cell) ->
-                    Action.updating ( ( { state | overlay = CardDetail { pos = position, card = cell } |> Just }, seed ), Cmd.none )
+                    Action.updating
+                        ( { state | overlay = CardDetail { pos = position, card = cell } |> Just }
+                        , Cmd.none
+                        )
 
                 Err _ ->
                     defaultCase
 
-        PickUp position ->
-            case game.board |> Grid.get position of
-                Ok (Just cell) ->
-                    pickUp cell position model
-
-                _ ->
-                    defaultCase
-
         PlaceCard position selection ->
-            placeCard position selection ( { state | selected = Just selection }, seed )
+            placeCard position selection { state | selected = Just selection }
 
         CardPlaced ->
             let
                 ( newGame, newCollection ) =
-                    game |> Game.step collection
+                    model.game |> Game.step collection
 
                 newHistory : UndoList Game
                 newHistory =
@@ -276,13 +253,11 @@ update msg (( { game, history, selected, viewCollection, collection } as state, 
 
             else
                 Action.updating
-                    ( ( { state
-                            | game = newGame
-                            , history = newHistory
-                            , collection = newCollection
-                        }
-                      , seed
-                      )
+                    ( { state
+                        | game = newGame
+                        , history = newHistory
+                        , collection = newCollection
+                      }
                     , Cmd.none
                     )
 
@@ -295,12 +270,10 @@ update msg (( { game, history, selected, viewCollection, collection } as state, 
                         |> UndoList.redo
             in
             Action.updating
-                ( ( { state
-                        | history = newHistory
-                        , game = newHistory |> .present
-                    }
-                  , seed
-                  )
+                ( { state
+                    | history = newHistory
+                    , game = newHistory |> .present
+                  }
                 , Cmd.none
                 )
 
@@ -313,39 +286,46 @@ update msg (( { game, history, selected, viewCollection, collection } as state, 
                         |> UndoList.undo
             in
             Action.updating
-                ( ( { state
-                        | history = newHistory
-                        , game = newHistory |> .present
-                    }
-                  , seed
-                  )
+                ( { state
+                    | history = newHistory
+                    , game = newHistory |> .present
+                  }
                 , Cmd.none
                 )
 
         PageChangeRequested ->
             Action.updating
-                ( ( { state
-                        | viewCollection = not viewCollection
-                        , viewedCard = Nothing
-                    }
-                  , seed
-                  )
+                ( { state
+                    | viewCollection = not viewCollection
+                    , viewedCard = Nothing
+                  }
                 , Cmd.none
                 )
 
         CardSelected cellType ->
             Action.updating
-                ( ( { state
-                        | viewedCard = Just cellType
-                    }
-                  , seed
-                  )
+                ( { state
+                    | viewedCard = Just cellType
+                  }
                 , Cmd.none
                 )
 
         CloseOverlay ->
             Action.updating
-                ( ( { state | overlay = Nothing }, seed ), Cmd.none )
+                ( { state | overlay = Nothing }, Cmd.none )
+
+        PickCardToAdd cellType ->
+            state.game
+                |> Game.addCardAndShuffle cellType
+                |> Random.map
+                    (\game ->
+                        { state
+                            | game = game
+                            , overlay = Nothing
+                        }
+                    )
+                |> apply model.seed
+                |> (\m -> Action.updating ( m, Cmd.none ))
 
 
 
@@ -360,14 +340,13 @@ view :
     -> (Msg -> msg)
     -> Model
     -> Element msg
-view scale restartMsg msgMapper ( model, _ ) =
+view scale restartMsg msgMapper model =
     [ HeaderView.view
         restartMsg
         model.game.score
     , GameView.view
         { scale = scale
         , selected = model.selected
-        , sort = True
         , positionSelected =
             case model.overlay of
                 Just (CardSelector position) ->
@@ -376,7 +355,6 @@ view scale restartMsg msgMapper ( model, _ ) =
                 _ ->
                     Nothing
         , positionSelectedMsg = msgMapper << PositionSelected
-        , selectedMsg = msgMapper << Selected
         , placeCard = \a b -> PlaceCard a b |> msgMapper
         }
         model.game
@@ -388,13 +366,7 @@ view scale restartMsg msgMapper ( model, _ ) =
                             (\overlay ->
                                 case overlay of
                                     CardDetail cardDetail ->
-                                        [ cardDetail.card
-                                            |> View.CellType.asCard
-                                        ]
-                                            |> Layout.column (Layout.centered ++ [ Layout.gap Config.space ])
-                                            |> Element.html
-                                            --needed to play nice with elm-ui
-                                            |> Element.el [ Element.centerX ]
+                                        View.Overlay.cardDetail cardDetail.card
                                             |> List.singleton
                                             |> Shade.viewNormal
                                                 [ Element.Events.onClick (CloseOverlay |> msgMapper)
@@ -406,6 +378,13 @@ view scale restartMsg msgMapper ( model, _ ) =
                                             |> Shade.viewTransparent
                                                 [ Element.Events.onClick (CloseOverlay |> msgMapper)
                                                 ]
+                                            |> Element.inFront
+
+                                    NewCardPicker list ->
+                                        list
+                                            |> View.Overlay.newCardPicker { select = PickCardToAdd >> msgMapper }
+                                            |> List.singleton
+                                            |> Shade.viewNormal []
                                             |> Element.inFront
                             )
                         |> Maybe.map List.singleton
