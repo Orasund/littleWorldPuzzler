@@ -17,3 +17,30 @@ card attrs =
             ++ Layout.centered
             ++ attrs
         )
+
+
+stylesheet : Html msg
+stylesheet =
+    """
+html,body {
+    height:100%;
+    width:100%;
+    marign:0;
+}
+
+button:hover {
+    filter:brightness(0.90);
+}
+
+button:focus {
+    filter:brightness(0.75);
+}
+
+@font-face {
+  font-family: 'Noto Emoji';
+  src: url('NotoColorEmoji.ttf');
+}
+        """
+        |> Html.text
+        |> List.singleton
+        |> Html.node "style" []

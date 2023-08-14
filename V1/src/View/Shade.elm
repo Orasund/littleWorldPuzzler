@@ -17,8 +17,11 @@ normal attrs =
 success : List (Attribute msg) -> Html msg -> Html msg
 success attrs =
     transparent
-        (Html.Attributes.style "background-color" View.Color.successShadeColor
-            :: attrs
+        ([ Html.Attributes.style "background-image"
+            ("linear-gradient(to top in lch," ++ View.Color.successShadeColor ++ ",transparent)")
+         , Html.Attributes.style "backdrop-filter" "blur(2px)"
+         ]
+            ++ attrs
         )
 
 

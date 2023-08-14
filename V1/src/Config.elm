@@ -15,3 +15,19 @@ bigSpace =
 
 borderRadius =
     space
+
+
+smallFontSize =
+    "0.8rem"
+
+
+bigFontSize =
+    "1.2rem"
+
+
+paragraphFontSize =
+    "2rem"
+
+
+titleFontSize =
+    "4rem"

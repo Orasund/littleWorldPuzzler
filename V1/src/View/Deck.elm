@@ -3,7 +3,6 @@ module View.Deck exposing (view)
 import Config
 import Data.Card as CellType exposing (Card(..))
 import Data.Deck as Deck exposing (Deck, Selected(..))
-import Element exposing (Element)
 import Html exposing (Html)
 import Html.Attributes
 import Layout

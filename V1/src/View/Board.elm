@@ -2,8 +2,6 @@ module View.Board exposing (toHtml, toHtmlWithoutInteraction)
 
 import Data.Card as CellType exposing (Card)
 import Data.Deck as Deck exposing (Deck, Selected(..))
-import Element exposing (Element)
-import Framework.Grid as Grid
 import Grid.Bordered as Grid exposing (Grid)
 import Html exposing (Attribute, Html)
 import Html.Attributes
@@ -45,24 +43,21 @@ viewCell attrs args maybeCellType =
             )
 
 
-toHtmlWithoutInteraction : { scale : Float } -> Grid Card -> Element msg
-toHtmlWithoutInteraction args grid =
+toHtmlWithoutInteraction : Grid Card -> Html msg
+toHtmlWithoutInteraction grid =
     grid
         |> view []
-            { scale = args.scale
-            , onPress = Nothing
+            { onPress = Nothing
             , onPlace = \_ _ -> Nothing
             , positionSelected = Nothing
             , deck = Nothing
             }
-        |> Element.html
 
 
 toHtml :
     List (Attribute msg)
     ->
-        { scale : Float
-        , onPress : Maybe (( Int, Int ) -> msg)
+        { onPress : Maybe (( Int, Int ) -> msg)
         , onPlace : ( Int, Int ) -> Selected -> msg
         , positionSelected : Maybe ( Int, Int )
         , deck : Deck
@@ -71,8 +66,7 @@ toHtml :
     -> Html msg
 toHtml attrs args =
     view attrs
-        { scale = args.scale
-        , onPress = args.onPress
+        { onPress = args.onPress
         , onPlace = \a b -> args.onPlace a b |> Just
         , positionSelected = args.positionSelected
         , deck = Just args.deck
@@ -82,8 +76,7 @@ toHtml attrs args =
 view :
     List (Attribute msg)
     ->
-        { scale : Float
-        , onPress : Maybe (( Int, Int ) -> msg)
+        { onPress : Maybe (( Int, Int ) -> msg)
         , onPlace : ( Int, Int ) -> Selected -> Maybe msg
         , positionSelected : Maybe ( Int, Int )
         , deck : Maybe Deck

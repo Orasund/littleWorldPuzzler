@@ -13,7 +13,7 @@ borderColor =
 
 successShadeColor : String
 successShadeColor =
-    "color-mix(in lch, " ++ primary ++ ", transparent 25%)"
+    "color-mix(in lch, " ++ primary ++ ", transparent 0%)"
 
 
 shadeColor : String

@@ -1,28 +1,10 @@
-module View.Button exposing (iconButton, textButton, view)
+module View.Button exposing (iconButton, textButton)
 
 import Config
-import Element exposing (Attribute, Element)
-import Element.Input as Input
-import Framework.Button as Button
 import Html exposing (Html)
 import Html.Attributes
 import Layout
 import View.Color as Color
-
-
-view :
-    List (Attribute msg)
-    ->
-        { onPress : Maybe msg
-        , label : Element msg
-        }
-    -> Element msg
-view attributes body =
-    Input.button
-        (Button.simple
-            ++ attributes
-        )
-        body
 
 
 iconButton : List (Html.Attribute msg) -> { label : String, onPress : Maybe msg, size : Float } -> Html msg -> Html msg

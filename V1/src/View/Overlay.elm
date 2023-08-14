@@ -1,13 +1,12 @@
 module View.Overlay exposing (..)
 
 import Config
-import Data.Card as CellType exposing (Card)
-import Element exposing (Element)
+import Data.Card as Card exposing (Card)
 import Html exposing (Html)
 import Html.Attributes
 import Layout
+import View.Button
 import View.Card
-import View.Color
 
 
 cardDetail : Card -> Html msg
@@ -18,21 +17,32 @@ cardDetail card =
         |> Layout.column (Layout.centered ++ [ Layout.gap Config.space ])
 
 
-newCardPicker : { select : Card -> msg } -> List Card -> Html msg
-newCardPicker args list =
-    [ "Pick one card to add to your deck"
-        |> Layout.text [ Html.Attributes.style "color" View.Color.background ]
-    , list
-        |> List.map
-            (\cellType ->
-                cellType
-                    |> View.Card.asSmallCard
-                        (Layout.asButton
-                            { label = "Select " ++ CellType.name cellType
-                            , onPress = args.select cellType |> Just
-                            }
-                        )
-            )
-        |> Layout.row [ Layout.gap Config.smallSpace ]
+newCardPicker : { select : Card -> msg } -> Card -> Html msg
+newCardPicker args card =
+    [ "Good Job!" |> Layout.text [ Html.Attributes.style "font-size" Config.titleFontSize ]
+    , "As a reward, one "
+        ++ Card.toString card
+        ++ " "
+        ++ Card.name card
+        ++ " has been added to your deck"
+        |> Layout.text []
+    , card |> View.Card.asSmallCard []
+    , View.Button.textButton []
+        { label = "Thanks"
+        , onPress = args.select card |> Just
+        }
     ]
-        |> Layout.column [ Layout.gap Config.space ]
+        |> Layout.column (Layout.centered ++ [ Layout.gap Config.space ])
+
+
+gameover : { restartMsg : msg } -> { score : Int } -> Html msg
+gameover { restartMsg } { score } =
+    [ "Game Over" |> Layout.text [ Html.Attributes.style "font-size" "2rem" ]
+    , "Score" |> Layout.text [ Html.Attributes.style "font-size" "2rem" ]
+    , score |> String.fromInt |> Layout.text [ Html.Attributes.style "font-size" "3rem" ]
+    , View.Button.textButton [ Html.Attributes.style "font-family" "sans-serif" ] <|
+        { onPress = Just restartMsg
+        , label = "Restart"
+        }
+    ]
+        |> Layout.column []
