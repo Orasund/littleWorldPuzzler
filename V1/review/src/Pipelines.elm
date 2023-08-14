@@ -6,4 +6,11 @@ import ReviewPipelineStyles.Fixes exposing (..)
 toRule =
     rule [forbid leftPizzaPipelines
         |> andTryToFixThemBy convertingToRightPizza
-        |> andCallThem "no left pipes"]
+        |> andCallThem "no left pipes"
+    ,forbid rightCompositionPipelines
+    |> andTryToFixThemBy convertingToRightPizza
+        |> andCallThem "no right composition pipes"
+    , forbid leftCompositionPipelines
+    |> andTryToFixThemBy convertingToRightPizza
+        |> andCallThem "no right composition pipes"
+    ]
