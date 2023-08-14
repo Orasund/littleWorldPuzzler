@@ -4,15 +4,13 @@ import Config
 import Data.Board as Board
 import Data.Card as Card exposing (Card(..))
 import Data.Deck as Deck exposing (Selected(..))
-import Data.Game as Game exposing (EndCondition(..), Game)
+import Data.Game as Game exposing (Game)
 import Dict exposing (Dict)
 import Grid.Bordered as Grid
 import Html exposing (Html)
 import Html.Attributes
 import Layout
 import Random exposing (Generator, Seed)
-import Random.List
-import Set
 import View.Board
 import View.Deck
 import View.Header as HeaderView

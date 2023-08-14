@@ -1,19 +1,18 @@
 module View.Deck exposing (view)
 
 import Config
-import Data.Card as CellType exposing (Card(..))
-import Data.Deck as Deck exposing (Deck, Selected(..))
+import Data.Card as CellType exposing (Card)
+import Data.Deck as Deck exposing (Deck)
 import Html exposing (Html)
 import Html.Attributes
 import Layout
-import View
 import View.Card
 import View.Color
 
 
 view : { viewCard : Card -> msg } -> Deck -> Html msg
 view args deck =
-    [ [ "📤" |> Layout.text [ Html.Attributes.style "font-size" "30px" ]
+    [ [ Layout.text [ Html.Attributes.style "font-size" "30px" ] "📤"
       , [ Deck.remaining deck
             |> List.tail
             |> Maybe.withDefault []
@@ -54,7 +53,7 @@ view args deck =
                 , Layout.contentWithSpaceBetween
                 , Layout.noWrap
                 ]
-      , "🗑" |> Layout.text [ Html.Attributes.style "font-size" "30px" ]
+      , Layout.text [ Html.Attributes.style "font-size" "30px" ] "🗑"
       ]
         |> Layout.row
             [ Html.Attributes.style "width" "100%"

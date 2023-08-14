@@ -12,8 +12,10 @@ when inside the directory containing this file.
 -}
 
 import Review.Rule exposing (Rule)
-import Pipelines
+import Rule.Pipelines
+import Rule.Unused
 
 config : List Rule
 config =
-    [Pipelines.toRule]
+    [Rule.Pipelines.toRule]
+    ++ Rule.Unused.rules

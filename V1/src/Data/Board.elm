@@ -5,7 +5,7 @@ module Data.Board exposing
     , rows
     )
 
-import Data.Card exposing (Card(..))
+import Data.Card exposing (Card)
 import Grid.Bordered as Grid exposing (Grid)
 
 

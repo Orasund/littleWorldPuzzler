@@ -1,4 +1,4 @@
-module Pipelines exposing (..)
+module Rule.Pipelines exposing (..)
 
 import ReviewPipelineStyles exposing (..)
 import ReviewPipelineStyles.Fixes exposing (..)
@@ -20,4 +20,20 @@ toRule =
         |> that haveASimpleInputStep
         |> andTryToFixThemBy eliminatingInputStep
         |> andCallThem "|> pipeline with simple input"
+    , forbid parentheticalApplicationPipelines
+        |> that
+            (haveMoreStepsThan 1
+                |> and
+                    (doNot
+                        (haveAParentNotSeparatedBy
+                            [ aLetBlock
+                            , aLambdaFunction
+                            , aFlowControlStructure
+                            , aDataStructure
+                            ]
+                        )
+                    )
+            )
+        |> andTryToFixThemBy convertingToRightPizza
+        |> andCallThem "parenthetical application with several steps"
     ]

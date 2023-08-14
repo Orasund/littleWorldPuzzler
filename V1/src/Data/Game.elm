@@ -2,8 +2,8 @@ module Data.Game exposing (EndCondition(..), Game, addCardAndShuffle, generator,
 
 import Automata
 import Data.Board exposing (Board, columns, rows)
-import Data.Card as CellType exposing (Card(..))
-import Data.Deck as Deck exposing (Deck, Selected(..))
+import Data.Card as CellType exposing (Card)
+import Data.Deck as Deck exposing (Deck)
 import Dict exposing (Dict)
 import Grid.Bordered as Grid
 import Random exposing (Generator)
