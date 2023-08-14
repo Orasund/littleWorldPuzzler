@@ -3,8 +3,11 @@ module Data.Card exposing
     , deck
     , list
     , name
+    , number
     , toString
     )
+
+import Dict exposing (Dict)
 
 
 type Card
@@ -14,22 +17,22 @@ type Card
     | Cat
     | Tree
     | Bear
-      --Old
-    | Lake
-    | Fire
-    | Mountain
-    | Volcano
-    | Glacier
-    | Ice
-    | Snow
-    | Evergreen
-    | Weed
 
 
 list : List Card
 list =
     --Also works as execution order for conflicting rules
-    [ Snow, Fire, Glacier, Volcano, Mountain, Evergreen, Ice, Lake, Weed, Plant, Stone, Mouse, Cat, Tree, Bear ]
+    [ Plant, Stone, Mouse, Cat, Tree, Bear ]
+
+
+number : Dict String Int
+number =
+    list
+        |> List.indexedMap
+            (\i card ->
+                ( toString card, i )
+            )
+        |> Dict.fromList
 
 
 deck : List Card
@@ -63,34 +66,6 @@ toString cellType =
             Tree ->
                 '🌳'
 
-            --Old
-            Lake ->
-                '🌊'
-
-            Fire ->
-                '🔥'
-
-            Mountain ->
-                '⛰'
-
-            Volcano ->
-                '🌋'
-
-            Glacier ->
-                '🏔'
-
-            Ice ->
-                '❄'
-
-            Snow ->
-                '⛄'
-
-            Evergreen ->
-                '🌲'
-
-            Weed ->
-                '🌿'
-
 
 name : Card -> String
 name cellType =
@@ -111,32 +86,4 @@ name cellType =
             "Tree"
 
         Bear ->
-            "Bear"
-
-        --Old
-        Lake ->
-            "Lake"
-
-        Fire ->
-            "Fire"
-
-        Mountain ->
-            "Stone"
-
-        Volcano ->
-            "Volcano"
-
-        Glacier ->
-            "Glacier"
-
-        Ice ->
-            "Ice"
-
-        Snow ->
-            "Snow"
-
-        Evergreen ->
-            "Evergreen Tree"
-
-        Weed ->
-            "Weed"
+            "Friend"

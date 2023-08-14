@@ -57,23 +57,23 @@ rules : Card -> List (Rule Card)
 rules cellType =
     (case cellType of
         Plant ->
-            [ Transforms { by = [ Mouse ], to = Mouse }
-            , Combines3 { by = Cat, to = Tree }
+            [ Combines3 { by = Cat, to = Tree }
+            , Transforms { by = [ Mouse ], to = Mouse }
             ]
 
         Stone ->
-            [ Combines3 { by = Plant, to = Mouse }
-            , Combines3 { by = Mouse, to = Cat }
+            [ Combines3 { by = Mouse, to = Cat }
+            , Combines3 { by = Plant, to = Mouse }
             ]
 
         Mouse ->
-            [ KilledBy Plant
-            , TurnsInto Cat
+            [ TurnsInto Cat
+            , KilledBy Plant
             ]
 
         Cat ->
-            [ KilledBy Mouse
-            , KilledBy Bear
+            [ KilledBy Bear
+            , KilledBy Mouse
             ]
 
         Tree ->
@@ -81,49 +81,5 @@ rules cellType =
 
         Bear ->
             [ KilledBy Cat ]
-
-        -- Old
-        Lake ->
-            [ KilledBy2 Fire
-            , TurnsInto Ice
-            ]
-
-        Fire ->
-            [ Disapears
-            , Surrounds Volcano
-            ]
-
-        Mountain ->
-            [ CombinesInto Glacier
-            , KilledBy Glacier
-            ]
-
-        Volcano ->
-            [ Disapears
-            , Spawns Fire
-            ]
-
-        Glacier ->
-            [ KilledBy Fire
-            , Spawns Ice
-            ]
-
-        Ice ->
-            [ Disapears
-            , Surrounds Snow
-            ]
-
-        Snow ->
-            [ KilledBy2 Fire
-            ]
-
-        Evergreen ->
-            [ KilledBy Fire
-            ]
-
-        Weed ->
-            [ TurnsInto Fire
-            , Spawns Weed
-            ]
     )
         |> List.map (intoRule >> (\f -> f cellType))

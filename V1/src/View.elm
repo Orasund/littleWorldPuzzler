@@ -26,6 +26,9 @@ html,body {
     height:100%;
     width:100%;
     marign:0;
+    background-color:"""
+        ++ View.Color.background
+        ++ """;
 }
 
 button:hover {

@@ -40,16 +40,32 @@ occuringTypes board =
 step : Dict String Card -> Game -> ( Game, Dict String Card )
 step set ({ score } as game) =
     let
-        board : Board
-        board =
+        newBoard : Board
+        newBoard =
             game.board
                 |> Grid.map (Automata.step (game.board |> Grid.toDict))
+
+        changes : Int
+        changes =
+            Dict.merge
+                (\_ _ -> (+) 1)
+                (\_ a b ->
+                    if a == b then
+                        identity
+
+                    else
+                        (+) 1
+                )
+                (\_ _ -> (+) 1)
+                (Grid.toDict newBoard)
+                (Grid.toDict game.board)
+                0
     in
     ( { game
-        | board = board
-        , score = score + 1
+        | board = newBoard
+        , score = score + changes
       }
-    , set |> Dict.union (occuringTypes board)
+    , set |> Dict.union (occuringTypes newBoard)
     )
 
 

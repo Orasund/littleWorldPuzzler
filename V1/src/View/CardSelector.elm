@@ -23,3 +23,4 @@ toHtml args list =
                         }
             )
         |> Layout.row [ Layout.noWrap, Layout.gap Config.smallSpace ]
+        |> Layout.el Layout.centered

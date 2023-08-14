@@ -2,7 +2,7 @@ module State exposing (..)
 
 import Config
 import Data.Board as Board
-import Data.Card exposing (Card(..))
+import Data.Card as Card exposing (Card(..))
 import Data.Deck as Deck exposing (Selected(..))
 import Data.Game as Game exposing (EndCondition(..), Game)
 import Dict exposing (Dict)
@@ -12,6 +12,7 @@ import Html.Attributes
 import Layout
 import Random exposing (Generator, Seed)
 import Random.List
+import Set
 import View.Board
 import View.Deck
 import View.Header as HeaderView
@@ -98,18 +99,29 @@ play ({ game } as state) =
 
 reshuffle : Model -> Generator Model
 reshuffle model =
-    model.collection
-        |> Dict.values
-        |> Random.List.choose
-        |> Random.map
-            (\( maybe, _ ) ->
-                maybe
-                    |> Maybe.map (\card -> pickCardToAdd card model)
-                    |> Maybe.withDefault model
-             {--{ model
-                    | overlay = maybe |> Maybe.map DeckCleared
-                }--}
-            )
+    let
+        randomCard =
+            case
+                model.collection
+                    |> Dict.values
+                    |> List.map
+                        (\card ->
+                            ( Card.number
+                                |> Dict.get (Card.toString card)
+                                |> Maybe.withDefault 0
+                                |> toFloat
+                            , card
+                            )
+                        )
+            of
+                head :: tail ->
+                    Random.weighted head tail
+
+                _ ->
+                    Random.constant Plant
+    in
+    randomCard
+        |> Random.map (\card -> pickCardToAdd card model)
 
 
 playFirst : ( Int, Int ) -> Model -> ( Model, List Action )

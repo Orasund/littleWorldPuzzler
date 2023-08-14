@@ -38,9 +38,25 @@ newCardPicker args card =
 
 gameover : { restartMsg : msg } -> { score : Int } -> Html msg
 gameover { restartMsg } { score } =
+    let
+        ( medal, text ) =
+            if score < 250 then
+                ( "🥉", "Achieve a score of 250 to get a silver medal." )
+
+            else if score < 500 then
+                ( "🥈", "Achieve a score of 500 to get a gold medal." )
+
+            else if score < 1000 then
+                ( "🥇", "Achieve a score of 1000 to get a perfect score." )
+
+            else
+                ( "💯", "Perfection!" )
+    in
     [ "Game Over" |> Layout.text [ Html.Attributes.style "font-size" Config.titleFontSize ]
-    , "Score" |> Layout.text [ Html.Attributes.style "font-size" "2rem" ]
-    , score |> String.fromInt |> Layout.text [ Html.Attributes.style "font-size" "3rem" ]
+    , medal |> Layout.text [ Html.Attributes.style "font-size" Config.titleFontSize ]
+    , "Score" |> Layout.text [ Html.Attributes.style "font-size" Config.bigFontSize ]
+    , score |> String.fromInt |> Layout.text [ Html.Attributes.style "font-size" Config.paragraphFontSize ]
+    , text |> Layout.text []
     , View.Button.textButton [ Html.Attributes.style "font-family" "sans-serif" ] <|
         { onPress = Just restartMsg
         , label = "Restart"
