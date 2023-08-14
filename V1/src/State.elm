@@ -102,12 +102,10 @@ reshuffle model =
     let
         randomCard =
             case
-                model.collection
-                    |> Dict.values
+                Dict.values model.collection
                     |> List.map
                         (\card ->
-                            ( Card.number
-                                |> Dict.get (Card.toString card)
+                            ( Dict.get (Card.toString card) Card.number
                                 |> Maybe.withDefault 0
                                 |> toFloat
                             , card
@@ -120,17 +118,16 @@ reshuffle model =
                 _ ->
                     Random.constant Plant
     in
-    randomCard
-        |> Random.map (\card -> pickCardToAdd card model)
+    Random.map (\card -> pickCardToAdd card model) randomCard
 
 
 playFirst : ( Int, Int ) -> Model -> ( Model, List Action )
 playFirst position ({ game } as model) =
     let
         board =
-            game.board
-                |> Board.place position
-                    (game.deck |> Deck.first)
+            Board.place position
+                (Deck.first game.deck)
+                game.board
     in
     (case Deck.playFirst game.deck of
         Just deck ->
@@ -157,10 +154,9 @@ playSecond position cellType ({ game } as state) =
         | game =
             { game
                 | deck =
-                    game.deck
-                        |> Deck.playSecond
+                    Deck.playSecond game.deck
                         |> Maybe.withDefault game.deck
-                , board = game.board |> Board.place position cellType
+                , board = Board.place position cellType game.board
             }
         , overlay = Nothing
     }
@@ -174,7 +170,7 @@ placeCard position selected ({ game } as model) =
             playFirst position model
 
         Second ->
-            case game.deck |> Deck.second of
+            case Deck.second game.deck of
                 Just second ->
                     playSecond position second model
 
@@ -186,11 +182,10 @@ updateGame : Model -> Model
 updateGame model =
     let
         ( newGame, newCollection ) =
-            model.game |> Game.step model.collection
+            Game.step model.collection model.game
     in
     if
-        newGame.board
-            |> Grid.emptyPositions
+        Grid.emptyPositions newGame.board
             |> (==) []
     then
         { model
@@ -207,12 +202,11 @@ updateGame model =
 
 positionSelected : ( Int, Int ) -> Model -> Model
 positionSelected position model =
-    case model.game.board |> Grid.get position of
+    case Grid.get position model.game.board of
         Ok Nothing ->
             { model
                 | overlay =
-                    position
-                        |> CardSelector
+                    CardSelector position
                         |> Just
             }
 
@@ -237,8 +231,7 @@ closeOverlay model =
 
 pickCardToAdd : Card -> Model -> Model
 pickCardToAdd card model =
-    model.game
-        |> Game.addCardAndShuffle card
+    Game.addCardAndShuffle card model.game
         |> Random.map
             (\game ->
                 { model
@@ -300,36 +293,35 @@ viewOverlay :
     -> Model
     -> Html msg
 viewOverlay args model =
-    model.overlay
-        |> Maybe.map
-            (\overlay ->
-                case overlay of
-                    CardDetail card ->
-                        View.Overlay.cardDetail card
-                            |> Shade.normal
-                                (Layout.asButton
-                                    { onPress = args.closeOverlay |> Just
-                                    , label = "Dismiss"
-                                    }
-                                )
+    Maybe.map
+        (\overlay ->
+            case overlay of
+                CardDetail card ->
+                    View.Overlay.cardDetail card
+                        |> Shade.normal
+                            (Layout.asButton
+                                { onPress = Just args.closeOverlay
+                                , label = "Dismiss"
+                                }
+                            )
 
-                    CardSelector _ ->
+                CardSelector _ ->
+                    Shade.transparent
+                        (Layout.asButton
+                            { onPress = Just args.closeOverlay
+                            , label = "Dismiss"
+                            }
+                        )
                         Layout.none
-                            |> Shade.transparent
-                                (Layout.asButton
-                                    { onPress = args.closeOverlay |> Just
-                                    , label = "Dismiss"
-                                    }
-                                )
 
-                    DeckCleared card ->
-                        card
-                            |> View.Overlay.newCardPicker { select = args.selectCardToAdd }
-                            |> Shade.success []
+                DeckCleared card ->
+                    View.Overlay.newCardPicker { select = args.selectCardToAdd } card
+                        |> Shade.success []
 
-                    GameFinished ->
-                        View.Overlay.gameover { restartMsg = args.restart model.seed }
-                            { score = model.game.score }
-                            |> Shade.normal []
-            )
+                GameFinished ->
+                    View.Overlay.gameover { restartMsg = args.restart model.seed }
+                        { score = model.game.score }
+                        |> Shade.normal []
+        )
+        model.overlay
         |> Maybe.withDefault Layout.none

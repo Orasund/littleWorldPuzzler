@@ -32,8 +32,7 @@ type alias Deck =
 
 generator : Generator Deck
 generator =
-    Data.Card.deck
-        |> fromList
+    fromList Data.Card.deck
         |> shuffle
 
 
@@ -70,8 +69,7 @@ first =
 
 second : Deck -> Maybe Card
 second deck =
-    deck.remaining
-        |> List.head
+    List.head deck.remaining
 
 
 playFirst : Deck -> Maybe Deck

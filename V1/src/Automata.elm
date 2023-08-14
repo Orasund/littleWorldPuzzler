@@ -15,8 +15,7 @@ order =
 
 rules : List (Rule Card)
 rules =
-    CellType.list
-        |> List.map Rule.rules
+    List.map Rule.rules CellType.list
         |> List.concat
 
 

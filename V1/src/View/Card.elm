@@ -17,19 +17,17 @@ asBigCard attrs cellType =
         width =
             200
     in
-    [ cellType
-        |> CellType.name
+    [ CellType.name cellType
         |> Layout.text []
-    , cellType
-        |> CellType.toString
+    , CellType.toString cellType
         |> Layout.text (Layout.centered ++ [ Html.Attributes.style "font-size" "4rem" ])
-    , cellType
-        |> asRules
-            ([ Html.Attributes.style "font-size" "1.2rem"
-             , Layout.gap Config.smallSpace
-             ]
-                ++ Layout.centered
-            )
+    , asRules
+        ([ Html.Attributes.style "font-size" "1.2rem"
+         , Layout.gap Config.smallSpace
+         ]
+            ++ Layout.centered
+        )
+        cellType
     ]
         |> Layout.column
             [ Layout.contentWithSpaceBetween
@@ -52,20 +50,18 @@ asSmallCard attrs cellType =
         width =
             90
     in
-    [ cellType
-        |> CellType.name
+    [ CellType.name cellType
         |> Layout.text []
-    , cellType
-        |> CellType.toString
+    , CellType.toString cellType
         |> Layout.text (Layout.centered ++ [ Html.Attributes.style "font-size" "3rem" ])
-    , cellType
-        |> asRules
-            ([ Html.Attributes.style "font-size" "0.8rem"
-             , Layout.gap Config.smallSpace
-             , Html.Attributes.style "width" "100%"
-             ]
-                ++ Layout.centered
-            )
+    , asRules
+        ([ Html.Attributes.style "font-size" "0.8rem"
+         , Layout.gap Config.smallSpace
+         , Html.Attributes.style "width" "100%"
+         ]
+            ++ Layout.centered
+        )
+        cellType
     ]
         |> Layout.column
             [ Layout.contentWithSpaceBetween
@@ -84,8 +80,7 @@ asSmallCard attrs cellType =
 
 asRules : List (Attribute msg) -> Card -> Html msg
 asRules attrs cellType =
-    cellType
-        |> Rule.rules
+    Rule.rules cellType
         |> List.map
             (\{ to, neighbors } ->
                 [ Neighborhood.toString neighbors
@@ -93,9 +88,8 @@ asRules attrs cellType =
                         [ Layout.fill
                         , Layout.contentAtEnd
                         ]
-                , "➡" |> Layout.text []
-                , to
-                    |> Maybe.map CellType.toString
+                , Layout.text [] "➡"
+                , Maybe.map CellType.toString to
                     |> Maybe.withDefault " "
                     |> Layout.text [ Layout.fill ]
                 ]

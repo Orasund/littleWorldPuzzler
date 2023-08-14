@@ -16,4 +16,8 @@ toRule =
             |> that (doNot spanMultipleLines |> and (haveMoreStepsThan 1))
             |> andTryToFixThemBy makingMultiline
             |> andCallThem "single line |> pipeline"
+       , forbid rightPizzaPipelines
+        |> that haveASimpleInputStep
+        |> andTryToFixThemBy eliminatingInputStep
+        |> andCallThem "|> pipeline with simple input"
     ]

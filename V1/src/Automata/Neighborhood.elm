@@ -83,8 +83,7 @@ setWest ( list, neighborHood ) =
 
 fromList : List ( Int, Maybe state ) -> Neighborhood (RuleExpression (Maybe state))
 fromList list =
-    ( list, anyNeighborhood )
-        |> setNorth
+    setNorth ( list, anyNeighborhood )
         |> setEast
         |> setSouth
         |> setWest
@@ -93,37 +92,36 @@ fromList list =
 
 toList : Neighborhood (RuleExpression (Maybe state)) -> List ( Int, Maybe state )
 toList neighbors =
-    [ .north, .east, .south, .west ]
-        |> List.foldr
-            (\get list ->
-                case neighbors |> get of
-                    Exactly elem ->
-                        case list of
-                            ( n, maybeState ) :: tail ->
-                                if maybeState == elem then
-                                    ( n + 1, maybeState ) :: tail
+    List.foldr
+        (\get list ->
+            case get neighbors of
+                Exactly elem ->
+                    case list of
+                        ( n, maybeState ) :: tail ->
+                            if maybeState == elem then
+                                ( n + 1, maybeState ) :: tail
 
-                                else
-                                    ( 1, elem ) :: list
+                            else
+                                ( 1, elem ) :: list
 
-                            [] ->
-                                [ ( 1, elem ) ]
+                        [] ->
+                            [ ( 1, elem ) ]
 
-                    Anything ->
-                        list
+                Anything ->
+                    list
 
-                    OneOf _ ->
-                        list
-            )
-            []
+                OneOf _ ->
+                    list
+        )
+        []
+        [ .north, .east, .south, .west ]
 
 
 fullSymmetry : Symmetry Card
 fullSymmetry maybeCellType { north, east, south, west } { from, to, neighbors } =
     let
         dict =
-            [ north, east, south, west ]
-                |> List.map (Maybe.map CellType.name >> Maybe.withDefault "")
+            List.map (Maybe.map CellType.name >> Maybe.withDefault "") [ north, east, south, west ]
                 |> List.sort
                 |> List.foldr
                     (\elem list ->
@@ -144,16 +142,14 @@ fullSymmetry maybeCellType { north, east, south, west } { from, to, neighbors } 
     if
         maybeCellType
             == from
-            && (neighbors
-                    |> toList
+            && (toList neighbors
                     |> List.filter
                         (\( minN, maybeElem ) ->
-                            dict
-                                |> Dict.get
-                                    (maybeElem
-                                        |> Maybe.map CellType.name
-                                        |> Maybe.withDefault ""
-                                    )
+                            Dict.get
+                                (Maybe.map CellType.name maybeElem
+                                    |> Maybe.withDefault ""
+                                )
+                                dict
                                 |> Maybe.andThen
                                     (\n ->
                                         if n >= minN then
@@ -180,8 +176,7 @@ toString { north, east, south, west } =
         expressionToString direction =
             case direction of
                 Exactly maybeCellType ->
-                    maybeCellType
-                        |> Maybe.map CellType.toString
+                    Maybe.map CellType.toString maybeCellType
                         |> Maybe.withDefault " "
 
                 --"⭕"
@@ -193,7 +188,7 @@ toString { north, east, south, west } =
 
         --"❓"
     in
-    (north |> expressionToString)
-        ++ (east |> expressionToString)
-        ++ (south |> expressionToString)
-        ++ (west |> expressionToString)
+    expressionToString north
+        ++ expressionToString east
+        ++ expressionToString south
+        ++ expressionToString west

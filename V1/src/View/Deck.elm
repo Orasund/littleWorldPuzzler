@@ -14,14 +14,12 @@ import View.Color
 view : { viewCard : Card -> msg } -> Deck -> Html msg
 view args deck =
     [ [ "📤" |> Layout.text [ Html.Attributes.style "font-size" "30px" ]
-      , [ deck
-            |> Deck.remaining
+      , [ Deck.remaining deck
             |> List.tail
             |> Maybe.withDefault []
             |> List.map
                 (\card ->
-                    card
-                        |> CellType.toString
+                    CellType.toString card
                         |> Layout.text
                             (Layout.asButton
                                 { label = "Show Details"
@@ -34,12 +32,10 @@ view args deck =
                 , Html.Attributes.style "border-right" ("2px solid " ++ View.Color.borderColor)
                 , Html.Attributes.style "padding-right" (String.fromInt Config.smallSpace ++ "px")
                 ]
-        , deck
-            |> Deck.played
+        , Deck.played deck
             |> List.map
                 (\card ->
-                    card
-                        |> CellType.toString
+                    CellType.toString card
                         |> Layout.text
                             (Layout.asButton
                                 { label = "Show Details"
@@ -75,13 +71,13 @@ view args deck =
 asCards : { viewCard : Card -> msg } -> Deck -> Html msg
 asCards args deck =
     [ Deck.first deck |> Just
-    , deck |> Deck.second
+    , Deck.second deck
     ]
         |> List.filterMap identity
         |> List.map
             (\cellType ->
-                cellType
-                    |> View.Card.asSmallCard
-                        (Layout.asButton { label = "Show Details", onPress = args.viewCard cellType |> Just })
+                View.Card.asSmallCard
+                    (Layout.asButton { label = "Show Details", onPress = args.viewCard cellType |> Just })
+                    cellType
             )
         |> Layout.row [ Layout.gap Config.smallSpace ]

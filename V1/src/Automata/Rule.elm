@@ -47,7 +47,7 @@ intoRule ruleType =
             \from -> rule { from = Just from, to = Nothing } []
 
         Transforms { by, to } ->
-            \from -> rule { from = Just from, to = Just to } (by |> List.map (\b -> ( 1, Just b )))
+            \from -> rule { from = Just from, to = Just to } (List.map (\b -> ( 1, Just b )) by)
 
         Combines3 { by, to } ->
             \from -> rule { from = Just from, to = Just to } [ ( 2, Just by ) ]

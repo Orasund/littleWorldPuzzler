@@ -27,11 +27,11 @@ list =
 
 number : Dict String Int
 number =
-    list
-        |> List.indexedMap
-            (\i card ->
-                ( toString card, i )
-            )
+    List.indexedMap
+        (\i card ->
+            ( toString card, i )
+        )
+        list
         |> Dict.fromList
 
 

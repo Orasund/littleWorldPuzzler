@@ -57,14 +57,14 @@ init _ =
 
 applyActions : List Action -> Model -> Model
 applyActions actions m =
-    actions
-        |> List.foldl
-            (\action model ->
-                case action of
-                    UpdateGameAction ->
-                        { model | updating = True }
-            )
-            m
+    List.foldl
+        (\action model ->
+            case action of
+                UpdateGameAction ->
+                    { model | updating = True }
+        )
+        m
+        actions
 
 
 updateStateTo : Model -> State.Model -> Model
@@ -82,8 +82,7 @@ update msg model =
         PlaceCard position selected ->
             State.placeCard position selected model.state
                 |> (\( m, l ) ->
-                        m
-                            |> updateStateTo model
+                        updateStateTo model m
                             |> applyActions l
                    )
 

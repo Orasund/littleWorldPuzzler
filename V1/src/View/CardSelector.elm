@@ -10,17 +10,16 @@ import View.Button
 
 toHtml : { onSelect : Selected -> Maybe msg } -> List ( Selected, Card ) -> Html msg
 toHtml args list =
-    list
-        |> List.map
-            (\( selected, cellType ) ->
-                cellType
-                    |> CellType.toString
-                    |> Html.text
-                    |> View.Button.iconButton []
-                        { onPress = args.onSelect selected
-                        , label = "Place " ++ CellType.name cellType
-                        , size = 48
-                        }
-            )
+    List.map
+        (\( selected, cellType ) ->
+            CellType.toString cellType
+                |> Html.text
+                |> View.Button.iconButton []
+                    { onPress = args.onSelect selected
+                    , label = "Place " ++ CellType.name cellType
+                    , size = 48
+                    }
+        )
+        list
         |> Layout.row [ Layout.noWrap, Layout.gap Config.smallSpace ]
         |> Layout.el Layout.centered

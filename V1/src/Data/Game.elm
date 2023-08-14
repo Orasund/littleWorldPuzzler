@@ -23,16 +23,14 @@ type alias Game =
 
 addCardAndShuffle : Card -> Game -> Generator Game
 addCardAndShuffle card game =
-    game.deck
-        |> Deck.addToDiscard card
+    Deck.addToDiscard card game.deck
         |> Deck.shuffle
         |> Random.map (\deck -> { game | deck = deck })
 
 
 occuringTypes : Board -> Dict String Card
 occuringTypes board =
-    board
-        |> Grid.values
+    Grid.values board
         |> List.map (\card -> ( CellType.toString card, card ))
         |> Dict.fromList
 
@@ -42,8 +40,7 @@ step set ({ score } as game) =
     let
         newBoard : Board
         newBoard =
-            game.board
-                |> Grid.map (Automata.step (game.board |> Grid.toDict))
+            Grid.map (Automata.step (Grid.toDict game.board)) game.board
 
         changes : Int
         changes =
@@ -65,18 +62,18 @@ step set ({ score } as game) =
         | board = newBoard
         , score = score + changes
       }
-    , set |> Dict.union (occuringTypes newBoard)
+    , Dict.union (occuringTypes newBoard) set
     )
 
 
 generator : Generator Game
 generator =
-    Deck.generator
-        |> Random.map
-            (\deck ->
-                { board =
-                    Grid.empty { columns = columns, rows = rows }
-                , deck = deck
-                , score = 0
-                }
-            )
+    Random.map
+        (\deck ->
+            { board =
+                Grid.empty { columns = columns, rows = rows }
+            , deck = deck
+            , score = 0
+            }
+        )
+        Deck.generator

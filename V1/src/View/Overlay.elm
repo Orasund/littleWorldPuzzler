@@ -12,22 +12,21 @@ import View.Card
 
 cardDetail : Card -> Html msg
 cardDetail card =
-    [ card
-        |> View.Card.asBigCard []
+    [ View.Card.asBigCard [] card
     ]
         |> Layout.column (Layout.centered ++ [ Layout.gap Config.space ])
 
 
 newCardPicker : { select : Card -> msg } -> Card -> Html msg
 newCardPicker args card =
-    [ "Deck Cleared" |> Layout.text [ Html.Attributes.style "font-size" Config.titleFontSize ]
+    [ Layout.text [ Html.Attributes.style "font-size" Config.titleFontSize ] "Deck Cleared"
     , "As a reward, one "
         ++ Card.toString card
         ++ " "
         ++ Card.name card
         ++ " has been added to your deck"
         |> Layout.text []
-    , card |> View.Card.asSmallCard []
+    , View.Card.asSmallCard [] card
     , View.Button.secondaryTextButton []
         { label = "Thanks"
         , onPress = args.select card |> Just
@@ -52,13 +51,12 @@ gameover { restartMsg } { score } =
             else
                 ( "💯", "Perfection!" )
     in
-    [ "Game Over" |> Layout.text [ Html.Attributes.style "font-size" Config.titleFontSize ]
-    , medal |> Layout.text [ Html.Attributes.style "font-size" Config.titleFontSize ]
-    , "Score" |> Layout.text [ Html.Attributes.style "font-size" Config.bigFontSize ]
-    , score
-        |> String.fromInt
+    [ Layout.text [ Html.Attributes.style "font-size" Config.titleFontSize ] "Game Over"
+    , Layout.text [ Html.Attributes.style "font-size" Config.titleFontSize ] medal
+    , Layout.text [ Html.Attributes.style "font-size" Config.bigFontSize ] "Score"
+    , String.fromInt score
         |> Layout.text [ Html.Attributes.style "font-size" Config.paragraphFontSize ]
-    , text |> Layout.text []
+    , Layout.text [] text
     , { onPress = Just restartMsg
       , label = "Restart"
       }
