@@ -84,64 +84,64 @@ view :
     -> Grid Card
     -> Html msg
 view attrs args grid =
-    Layout.column (Html.Attributes.style "border" ("1px solid " ++ View.Color.borderColor) :: attrs) <|
-        (grid
-            |> Grid.foldr
-                (\( x, y ) maybeCellType ( workingRow, list ) ->
-                    let
-                        newRow : List (Html msg)
-                        newRow =
-                            (case args.positionSelected of
-                                Just a ->
-                                    if a == ( x, y ) then
-                                        [ viewCell []
-                                            { position = ( x, y )
-                                            , onPress = Nothing
-                                            }
-                                            maybeCellType
-                                        , [ args.deck |> Maybe.map Deck.first |> Maybe.map (Tuple.pair First)
-                                          , args.deck |> Maybe.andThen Deck.second |> Maybe.map (Tuple.pair Second)
-                                          ]
-                                            |> List.filterMap identity
-                                            |> View.CardSelector.toHtml { onSelect = args.onPlace a }
-                                            |> Layout.el
-                                                ([ Html.Attributes.style "height" "100%"
-                                                 , Html.Attributes.style "z-index" "10"
-                                                 , Html.Attributes.style "position" "absolute"
-                                                 , Html.Attributes.style "top" "0"
-                                                 , Html.Attributes.style "left" "-12.5%"
-                                                 ]
-                                                    ++ Layout.centered
-                                                )
-                                        ]
-                                            |> Html.div [ Html.Attributes.style "position" "relative" ]
+    (grid
+        |> Grid.foldr
+            (\( x, y ) maybeCellType ( workingRow, list ) ->
+                let
+                    newRow : List (Html msg)
+                    newRow =
+                        (case args.positionSelected of
+                            Just a ->
+                                if a == ( x, y ) then
+                                    [ viewCell []
+                                        { position = ( x, y )
+                                        , onPress = Nothing
+                                        }
+                                        maybeCellType
+                                    , [ args.deck |> Maybe.map Deck.first |> Maybe.map (Tuple.pair First)
+                                      , args.deck |> Maybe.andThen Deck.second |> Maybe.map (Tuple.pair Second)
+                                      ]
+                                        |> List.filterMap identity
+                                        |> View.CardSelector.toHtml { onSelect = args.onPlace a }
+                                        |> Layout.el
+                                            ([ Html.Attributes.style "height" "100%"
+                                             , Html.Attributes.style "z-index" "10"
+                                             , Html.Attributes.style "position" "absolute"
+                                             , Html.Attributes.style "top" "0"
+                                             , Html.Attributes.style "left" "-12.5%"
+                                             ]
+                                                ++ Layout.centered
+                                            )
+                                    ]
+                                        |> Html.div [ Html.Attributes.style "position" "relative" ]
 
-                                    else
-                                        viewCell []
-                                            { position = ( x, y )
-                                            , onPress = args.onPress
-                                            }
-                                            maybeCellType
-
-                                Nothing ->
+                                else
                                     viewCell []
                                         { position = ( x, y )
                                         , onPress = args.onPress
                                         }
                                         maybeCellType
-                            )
-                                :: workingRow
-                    in
-                    if y == 0 then
-                        ( [], newRow :: list )
 
-                    else
-                        ( newRow, list )
-                )
-                ( [], [] )
-            |> Tuple.second
-            |> List.map
-                (Layout.row
-                    []
-                )
-        )
+                            Nothing ->
+                                viewCell []
+                                    { position = ( x, y )
+                                    , onPress = args.onPress
+                                    }
+                                    maybeCellType
+                        )
+                            :: workingRow
+                in
+                if y == 0 then
+                    ( [], newRow :: list )
+
+                else
+                    ( newRow, list )
+            )
+            ( [], [] )
+        |> Tuple.second
+        |> List.map
+            (Layout.row
+                []
+            )
+    )
+        |> Layout.column (Html.Attributes.style "border" ("1px solid " ++ View.Color.borderColor) :: attrs)

@@ -64,7 +64,7 @@ type SwipingState
 -}
 initialSwipingState : SwipingState
 initialSwipingState =
-    SwipingState <| InternalState Nothing
+    InternalState Nothing |> SwipingState
 
 
 {-| Internal representation of the state of the swiping events

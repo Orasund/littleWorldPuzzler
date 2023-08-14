@@ -34,14 +34,14 @@ view { availableSpace, amount, dim } { attributes, selected, onPress, content } 
             dim
     in
     Element.el
-        [ Element.height <| Element.px <| floor <| height * 1.1
+        [ height * 1.1 |> floor |> Element.px |> Element.height
         , Element.width <|
             Element.px <|
                 if selected then
-                    round <| width
+                    width |> round
 
                 else if availableSpace / toFloat amount >= width then
-                    round <| width
+                    width |> round
 
                 else
                     -- used a geometric series: s - 2w + c / (a - 1 ) = c
@@ -59,10 +59,10 @@ view { availableSpace, amount, dim } { attributes, selected, onPress, content } 
 
                   else
                     [ Element.alignBottom ]
-                , [ Element.width <| Element.px <| floor <| width
-                  , Element.height <| Element.px <| floor <| height
+                , [ width |> floor |> Element.px |> Element.width
+                  , height |> floor |> Element.px |> Element.height
                   , Font.alignLeft
-                  , Border.color <| Color.lightGrey
+                  , Color.lightGrey |> Border.color
                   ]
                 , attributes
                 ]
@@ -91,8 +91,8 @@ hand attributes { dimensions, width, cards } =
                 }
             )
         |> Element.row
-            ([ Element.width <| Element.px <| round <| width
-             , Element.height <| Element.fill
+            ([ width |> round |> Element.px |> Element.width
+             , Element.fill |> Element.height
              , Element.centerX
              ]
                 ++ (if width / toFloat cardsAmount >= cardWidth then

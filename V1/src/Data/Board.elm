@@ -25,5 +25,4 @@ type alias Board =
 
 place : ( Int, Int ) -> Card -> Board -> Board
 place position cellType =
-    Grid.ignoringErrors <|
-        Grid.insert position cellType
+    Grid.insert position cellType |> Grid.ignoringErrors

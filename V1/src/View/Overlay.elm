@@ -57,10 +57,10 @@ gameover { restartMsg } { score } =
     , "Score" |> Layout.text [ Html.Attributes.style "font-size" Config.bigFontSize ]
     , score |> String.fromInt |> Layout.text [ Html.Attributes.style "font-size" Config.paragraphFontSize ]
     , text |> Layout.text []
-    , View.Button.textButton [ Html.Attributes.style "font-family" "sans-serif" ] <|
-        { onPress = Just restartMsg
-        , label = "Restart"
-        }
+    , { onPress = Just restartMsg
+      , label = "Restart"
+      }
+        |> View.Button.textButton [ Html.Attributes.style "font-family" "sans-serif" ]
     ]
         |> Layout.column (Layout.gap Config.space :: Layout.centered)
         |> View.card []

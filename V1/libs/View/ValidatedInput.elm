@@ -1,11 +1,12 @@
-module View.ValidatedInput exposing (Model,getRaw,getValue,getError,Msg,init,update,view)
+module View.ValidatedInput exposing (Model, Msg, getError, getRaw, getValue, init, update, view)
 
-import Element exposing (Element,Attribute)
-import Element.Input as Input exposing (Placeholder)
+import Element exposing (Attribute, Element)
 import Element.Events as Events
+import Element.Input as Input exposing (Placeholder)
 
-type Model err a =
-    Model
+
+type Model err a
+    = Model
         { raw : String
         , value : a
         , err : Maybe err
@@ -13,24 +14,29 @@ type Model err a =
         , toString : a -> String
         }
 
+
 getRaw : Model err a -> String
-getRaw (Model {raw}) =
+getRaw (Model { raw }) =
     raw
 
+
 getValue : Model err a -> a
-getValue (Model {value}) =
+getValue (Model { value }) =
     value
 
+
 getError : Model err a -> Maybe err
-getError (Model {err}) =
+getError (Model { err }) =
     err
+
 
 type Msg
     = ChangedRaw String
     | LostFocus
 
+
 init : { value : a, validator : String -> Result err a, toString : a -> String } -> Model err a
-init  { validator,toString,value } =
+init { validator, toString, value } =
     Model
         { raw = value |> toString
         , value = value
@@ -39,38 +45,45 @@ init  { validator,toString,value } =
         , toString = toString
         }
 
+
 update : Msg -> Model err a -> Model err a
 update msg (Model model) =
     case msg of
         ChangedRaw string ->
             Model
-            { model
-            | raw = string
-            , err = Nothing
-            }
+                { model
+                    | raw = string
+                    , err = Nothing
+                }
+
         LostFocus ->
             case model.validator model.raw of
                 Ok value ->
                     Model
-                    { model
-                    | value = value
-                    , err = Nothing
-                    }
+                        { model
+                            | value = value
+                            , err = Nothing
+                        }
+
                 Err err ->
                     Model
-                    { model
-                    | raw = model.value |> model.toString
-                    , err = Just err
-                    }
+                        { model
+                            | raw = model.value |> model.toString
+                            , err = Just err
+                        }
 
-view : List (Attribute msg) -> Model err a
-    -> { msgMapper : Msg -> msg
-       , placeholder : Maybe (Placeholder msg)
-       , label : String
-       }
-       -> Element msg
-view attributes (Model model) {msgMapper,placeholder,label} =
-    Input.text (attributes ++ [Events.onLoseFocus <| msgMapper <| LostFocus])
+
+view :
+    List (Attribute msg)
+    -> Model err a
+    ->
+        { msgMapper : Msg -> msg
+        , placeholder : Maybe (Placeholder msg)
+        , label : String
+        }
+    -> Element msg
+view attributes (Model model) { msgMapper, placeholder, label } =
+    Input.text (attributes ++ [ LostFocus |> msgMapper |> Events.onLoseFocus ])
         { onChange = ChangedRaw >> msgMapper
         , text = model.raw
         , placeholder = placeholder

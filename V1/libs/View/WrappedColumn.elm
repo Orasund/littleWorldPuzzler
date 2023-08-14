@@ -148,12 +148,12 @@ viewButtonRow { arrangement, scrollPos, labels, positions } =
                             else
                                 []
                            )
-                        ++ [ Element.height <| Element.fill
-                           , Font.size <| 10
+                        ++ [ Element.fill |> Element.height
+                           , 10 |> Font.size
                            ]
                     )
-                    { onPress = Just <| JumpTo <| name
-                    , label = Element.text <| labels <| name
+                    { onPress = name |> JumpTo |> Just
+                    , label = name |> labels |> Element.text
                     }
             )
         |> Element.row
@@ -175,8 +175,9 @@ view asElement { labels, arrangement } =
         |> List.map
             (List.map
                 (\header ->
-                    Element.column Grid.simple <|
-                        [ Element.el
+                    [ (header |> labels)
+                        |> Element.text
+                        |> Element.el
                             (Heading.h2
                                 ++ [ header
                                         |> labels
@@ -184,11 +185,9 @@ view asElement { labels, arrangement } =
                                         |> Element.htmlAttribute
                                    ]
                             )
-                          <|
-                            Element.text <|
-                                (header |> labels)
-                        , header |> asElement
-                        ]
+                    , header |> asElement
+                    ]
+                        |> Element.column Grid.simple
                 )
                 >> Element.column Grid.simple
             )
