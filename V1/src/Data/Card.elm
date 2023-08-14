@@ -37,12 +37,6 @@ deck =
     [ Plant
     , Plant
     , Plant
-    , Plant
-    , Plant
-    , Plant
-    , Plant
-    , Stone
-    , Stone
     , Stone
     ]
 

@@ -10,15 +10,24 @@ import View
 import View.Card
 
 
-view : Deck -> Html msg
-view deck =
+view : { viewCard : Card -> msg } -> Deck -> Html msg
+view args deck =
     [ [ "📤" |> Layout.text [ Html.Attributes.style "font-size" "30px" ]
       , [ deck
             |> Deck.remaining
             |> List.tail
             |> Maybe.withDefault []
-            |> List.map CellType.toString
-            |> List.map (Layout.text [])
+            |> List.map
+                (\card ->
+                    card
+                        |> CellType.toString
+                        |> Layout.text
+                            (Layout.asButton
+                                { label = "Show Details"
+                                , onPress = args.viewCard card |> Just
+                                }
+                            )
+                )
             |> Layout.row
                 [ Layout.gap Config.smallSpace
                 ]
@@ -34,8 +43,11 @@ view deck =
             |> Layout.row [ Layout.fill, Layout.contentWithSpaceBetween ]
       , "🗑" |> Layout.text [ Html.Attributes.style "font-size" "30px" ]
       ]
-        |> Layout.row [ Html.Attributes.style "width" "100%" ]
-    , asCards deck |> Layout.el Layout.centered
+        |> Layout.row
+            [ Html.Attributes.style "width" "100%"
+            , Layout.gap Config.smallSpace
+            ]
+    , asCards args deck |> Layout.el Layout.centered
     ]
         |> Layout.column
             [ Layout.gap Config.space
@@ -43,8 +55,8 @@ view deck =
             ]
 
 
-asCards : Deck -> Html msg
-asCards deck =
+asCards : { viewCard : Card -> msg } -> Deck -> Html msg
+asCards args deck =
     [ Deck.first deck |> Just
     , deck |> Deck.second
     ]
@@ -52,6 +64,7 @@ asCards deck =
         |> List.map
             (\cellType ->
                 cellType
-                    |> View.Card.asSmallCard []
+                    |> View.Card.asSmallCard
+                        (Layout.asButton { label = "Show Details", onPress = args.viewCard cellType |> Just })
             )
         |> Layout.row [ Layout.gap Config.smallSpace ]

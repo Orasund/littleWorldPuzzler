@@ -182,7 +182,7 @@ toString { north, east, south, west } =
 
                 --"⭕"
                 Anything ->
-                    "▪"
+                    ""
 
                 OneOf _ ->
                     ""

@@ -9,16 +9,17 @@ import View.Color
 normal : List (Attribute msg) -> Html msg -> Html msg
 normal attrs =
     transparent
-        (Html.Attributes.style "background-color" View.Color.shadeColor
-            :: attrs
+        ([ Html.Attributes.style "background-color" View.Color.shadeColor
+         , Html.Attributes.style "backdrop-filter" "blur(2px)"
+         ]
+            ++ attrs
         )
 
 
 success : List (Attribute msg) -> Html msg -> Html msg
 success attrs =
     transparent
-        ([ Html.Attributes.style "background-image"
-            ("linear-gradient(to top in lch," ++ View.Color.successShadeColor ++ ",transparent)")
+        ([ Html.Attributes.style "background-color" View.Color.successShadeColor
          , Html.Attributes.style "backdrop-filter" "blur(2px)"
          ]
             ++ attrs

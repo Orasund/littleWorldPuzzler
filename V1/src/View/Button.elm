@@ -1,4 +1,4 @@
-module View.Button exposing (iconButton, textButton)
+module View.Button exposing (iconButton, secondaryTextButton, textButton)
 
 import Config
 import Html exposing (Html)
@@ -35,3 +35,13 @@ textButton attrs args =
             ++ attrs
         )
         args
+
+
+secondaryTextButton : List (Html.Attribute msg) -> { label : String, onPress : Maybe msg } -> Html msg
+secondaryTextButton attrs =
+    textButton
+        ([ Html.Attributes.style "background-color" Color.secondary
+         , Html.Attributes.style "border" ("2px solid " ++ Color.secondary)
+         ]
+            ++ attrs
+        )

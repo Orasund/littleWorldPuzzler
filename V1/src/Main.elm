@@ -1,11 +1,14 @@
 module Main exposing (main)
 
 import Browser
+import Data.Card exposing (Card)
+import Data.Deck exposing (Selected)
 import Html
 import Html.Attributes
 import Layout
 import Random exposing (Seed)
-import State
+import State exposing (Action(..))
+import Time
 import View
 
 
@@ -15,13 +18,19 @@ import View
 ----------------------
 
 
-type Model
-    = Preparing
-    | Playing State.Model
+type alias Model =
+    { state : State.Model
+    , updating : Bool
+    }
 
 
 type Msg
-    = PlayingSpecific State.Msg
+    = PositionSelected ( Int, Int )
+    | PlaceCard ( Int, Int ) Selected
+    | UpdateGame
+    | ViewCard Card
+    | CloseOverlay
+    | PickCardToAdd Card
     | Restart Seed
 
 
@@ -33,7 +42,9 @@ type Msg
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Preparing
+    ( { state = State.init (Random.initialSeed 42)
+      , updating = False
+      }
     , Random.generate Restart Random.independentSeed
     )
 
@@ -44,22 +55,59 @@ init _ =
 ----------------------
 
 
+applyActions : List Action -> Model -> Model
+applyActions actions m =
+    actions
+        |> List.foldl
+            (\action model ->
+                case action of
+                    UpdateGameAction ->
+                        { model | updating = True }
+            )
+            m
+
+
+updateStateTo : Model -> State.Model -> Model
+updateStateTo model state =
+    { model | state = state }
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case ( msg, model ) of
-        ( PlayingSpecific playingMsg, Playing playingModel ) ->
-            ( State.update playingMsg playingModel
-                |> Playing
-            , Cmd.none
-            )
+    ( case msg of
+        PositionSelected position ->
+            State.positionSelected position model.state
+                |> updateStateTo model
 
-        ( Restart seed, _ ) ->
+        PlaceCard position selected ->
+            State.placeCard position selected model.state
+                |> (\( m, l ) ->
+                        m
+                            |> updateStateTo model
+                            |> applyActions l
+                   )
+
+        UpdateGame ->
+            State.updateGame model.state
+                |> updateStateTo { model | updating = False }
+
+        ViewCard card ->
+            State.viewCard card model.state
+                |> updateStateTo model
+
+        CloseOverlay ->
+            State.closeOverlay model.state
+                |> updateStateTo model
+
+        PickCardToAdd card ->
+            State.pickCardToAdd card model.state
+                |> updateStateTo model
+
+        Restart seed ->
             State.init seed
-                |> Tuple.mapBoth Playing
-                    (Cmd.map PlayingSpecific)
-
-        _ ->
-            ( model, Cmd.none )
+                |> updateStateTo model
+    , Cmd.none
+    )
 
 
 
@@ -69,8 +117,12 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions model =
+    if model.updating then
+        Time.every 200 (\_ -> UpdateGame)
+
+    else
+        Sub.none
 
 
 
@@ -89,12 +141,26 @@ view model =
             ]
             []
         , View.stylesheet
-        , case model of
-            Playing playingModel ->
-                State.view Restart PlayingSpecific playingModel
-
-            Preparing ->
-                Layout.none
+        , [ State.viewGame
+                { restart = Restart
+                , placeCard = PlaceCard
+                , viewCard = ViewCard
+                , selectPositon = PositionSelected
+                }
+                model.state
+                |> Layout.el (Html.Attributes.style "height" "100%" :: Layout.centered)
+          , State.viewOverlay
+                { restart = Restart
+                , closeOverlay = CloseOverlay
+                , selectCardToAdd = PickCardToAdd
+                }
+                model.state
+          ]
+            |> Html.div
+                [ Html.Attributes.style "width" "100%"
+                , Html.Attributes.style "height" "100%"
+                , Html.Attributes.style "position" "relative"
+                ]
         ]
     }
 

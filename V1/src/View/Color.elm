@@ -3,22 +3,29 @@ module View.Color exposing (..)
 
 cardBackground : String
 cardBackground =
-    "color-mix(in lch, " ++ secondary ++ " 10%," ++ background ++ ")"
+    mix (secondary ++ " 10%") background
 
 
 borderColor : String
 borderColor =
-    "color-mix(in lch, " ++ secondary ++ " 10%," ++ background ++ ")"
+    mix (secondary ++ " 10%") background
 
 
 successShadeColor : String
 successShadeColor =
-    "color-mix(in lch, " ++ primary ++ ", transparent 0%)"
+    mix
+        (mix (primary ++ " 50%") "white" ++ " 80%")
+        "transparent"
 
 
 shadeColor : String
 shadeColor =
-    "color-mix(in lch, " ++ secondary ++ ", transparent 25%)"
+    mix (secondary ++ " 30%") "transparent"
+
+
+mix : String -> String -> String
+mix a b =
+    "color-mix(in lab," ++ a ++ ", " ++ b ++ ")"
 
 
 

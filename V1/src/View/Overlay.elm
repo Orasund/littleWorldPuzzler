@@ -5,6 +5,7 @@ import Data.Card as Card exposing (Card)
 import Html exposing (Html)
 import Html.Attributes
 import Layout
+import View
 import View.Button
 import View.Card
 
@@ -19,7 +20,7 @@ cardDetail card =
 
 newCardPicker : { select : Card -> msg } -> Card -> Html msg
 newCardPicker args card =
-    [ "Good Job!" |> Layout.text [ Html.Attributes.style "font-size" Config.titleFontSize ]
+    [ "Deck Cleared" |> Layout.text [ Html.Attributes.style "font-size" Config.titleFontSize ]
     , "As a reward, one "
         ++ Card.toString card
         ++ " "
@@ -27,7 +28,7 @@ newCardPicker args card =
         ++ " has been added to your deck"
         |> Layout.text []
     , card |> View.Card.asSmallCard []
-    , View.Button.textButton []
+    , View.Button.secondaryTextButton []
         { label = "Thanks"
         , onPress = args.select card |> Just
         }
@@ -37,7 +38,7 @@ newCardPicker args card =
 
 gameover : { restartMsg : msg } -> { score : Int } -> Html msg
 gameover { restartMsg } { score } =
-    [ "Game Over" |> Layout.text [ Html.Attributes.style "font-size" "2rem" ]
+    [ "Game Over" |> Layout.text [ Html.Attributes.style "font-size" Config.titleFontSize ]
     , "Score" |> Layout.text [ Html.Attributes.style "font-size" "2rem" ]
     , score |> String.fromInt |> Layout.text [ Html.Attributes.style "font-size" "3rem" ]
     , View.Button.textButton [ Html.Attributes.style "font-family" "sans-serif" ] <|
@@ -45,4 +46,5 @@ gameover { restartMsg } { score } =
         , label = "Restart"
         }
     ]
-        |> Layout.column []
+        |> Layout.column (Layout.gap Config.space :: Layout.centered)
+        |> View.card []

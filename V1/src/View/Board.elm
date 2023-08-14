@@ -84,7 +84,7 @@ view :
     -> Grid Card
     -> Html msg
 view attrs args grid =
-    Layout.column attrs <|
+    Layout.column (Html.Attributes.style "border" ("1px solid " ++ View.Color.borderColor) :: attrs) <|
         (grid
             |> Grid.foldr
                 (\( x, y ) maybeCellType ( workingRow, list ) ->

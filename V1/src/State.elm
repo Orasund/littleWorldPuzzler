@@ -1,4 +1,4 @@
-module State exposing (Model, Msg, init, update, view)
+module State exposing (..)
 
 import Config
 import Data.Board as Board
@@ -31,18 +31,15 @@ width =
 
 
 type Overlay
-    = CardDetail { pos : ( Int, Int ), card : Card }
+    = CardDetail Card
     | CardSelector ( Int, Int )
-    | NewCardPicker Card
+    | DeckCleared Card
     | GameFinished
 
 
 type alias State =
     { game : Game
-    , selected : Maybe Selected
     , collection : Dict String Card
-    , viewCollection : Bool
-    , viewedCard : Maybe Card
     , overlay : Maybe Overlay
     , seed : Seed
     }
@@ -52,14 +49,8 @@ type alias Model =
     State
 
 
-type Msg
-    = PositionSelected ( Int, Int )
-    | PlaceCard ( Int, Int ) Selected
-    | CardPlaced
-    | PageChangeRequested
-    | CardSelected Card
-    | CloseOverlay
-    | PickCardToAdd Card
+type Action
+    = UpdateGameAction
 
 
 
@@ -68,22 +59,17 @@ type Msg
 ----------------------
 
 
-init : Seed -> ( Model, Cmd Msg )
+init : Seed -> Model
 init initialSeed =
     let
         ( game, seed ) =
             Random.step Game.generator initialSeed
     in
-    ( { game = game
-      , selected = Nothing
-      , collection = Dict.empty
-      , viewCollection = False
-      , viewedCard = Nothing
-      , overlay = Nothing
-      , seed = seed
-      }
-    , Cmd.none
-    )
+    { game = game
+    , collection = Dict.empty
+    , overlay = Nothing
+    , seed = seed
+    }
 
 
 
@@ -101,28 +87,32 @@ apply seed generator =
     { model | seed = newSeed }
 
 
-play : Model -> Model
+play : Model -> ( Model, List Action )
 play ({ game } as state) =
-    { state
+    ( { state
         | game = game
-        , selected = Nothing
-    }
+      }
+    , [ UpdateGameAction ]
+    )
 
 
-openNewCardPicker : Model -> Generator Model
-openNewCardPicker model =
+reshuffle : Model -> Generator Model
+reshuffle model =
     model.collection
         |> Dict.values
         |> Random.List.choose
         |> Random.map
             (\( maybe, _ ) ->
-                { model
-                    | overlay = maybe |> Maybe.map NewCardPicker
-                }
+                maybe
+                    |> Maybe.map (\card -> pickCardToAdd card model)
+                    |> Maybe.withDefault model
+             {--{ model
+                    | overlay = maybe |> Maybe.map DeckCleared
+                }--}
             )
 
 
-playFirst : ( Int, Int ) -> Model -> Model
+playFirst : ( Int, Int ) -> Model -> ( Model, List Action )
 playFirst position ({ game } as model) =
     let
         board =
@@ -143,13 +133,13 @@ playFirst position ({ game } as model) =
                 |> Random.constant
 
         Nothing ->
-            openNewCardPicker { model | game = { game | board = board } }
+            reshuffle { model | game = { game | board = board } }
     )
         |> apply model.seed
         |> play
 
 
-playSecond : ( Int, Int ) -> Card -> Model -> Model
+playSecond : ( Int, Int ) -> Card -> Model -> ( Model, List Action )
 playSecond position cellType ({ game } as state) =
     { state
         | game =
@@ -162,7 +152,7 @@ playSecond position cellType ({ game } as state) =
         |> play
 
 
-placeCard : ( Int, Int ) -> Selected -> Model -> Model
+placeCard : ( Int, Int ) -> Selected -> Model -> ( Model, List Action )
 placeCard position selected ({ game } as model) =
     case selected of
         First ->
@@ -177,80 +167,67 @@ placeCard position selected ({ game } as model) =
                     playFirst position model
 
 
-update : Msg -> Model -> Model
-update msg (({ selected, viewCollection, collection } as state) as model) =
+updateGame : Model -> Model
+updateGame model =
     let
-        defaultCase : Model
-        defaultCase =
-            model
+        ( newGame, newCollection ) =
+            model.game |> Game.step model.collection
     in
-    case msg of
-        PositionSelected position ->
-            case model.game.board |> Grid.get position of
-                Ok Nothing ->
-                    case selected of
-                        Just s ->
-                            placeCard position s model
+    if newGame.board |> Grid.emptyPositions |> (==) [] then
+        { model
+            | game = newGame
+            , overlay = Just GameFinished
+        }
 
-                        Nothing ->
-                            { state
-                                | overlay =
-                                    position
-                                        |> CardSelector
-                                        |> Just
-                            }
+    else
+        { model
+            | game = newGame
+            , collection = newCollection
+        }
 
-                Ok (Just cell) ->
-                    { state | overlay = CardDetail { pos = position, card = cell } |> Just }
 
-                Err _ ->
-                    defaultCase
-
-        PlaceCard position selection ->
-            placeCard position selection { state | selected = Just selection }
-
-        CardPlaced ->
-            let
-                ( newGame, newCollection ) =
-                    model.game |> Game.step collection
-            in
-            if newGame.board |> Grid.emptyPositions |> (==) [] then
-                { state
-                    | game = newGame
-                    , overlay = Just GameFinished
-                }
-
-            else
-                { state
-                    | game = newGame
-                    , collection = newCollection
-                }
-
-        PageChangeRequested ->
-            { state
-                | viewCollection = not viewCollection
-                , viewedCard = Nothing
+positionSelected : ( Int, Int ) -> Model -> Model
+positionSelected position model =
+    case model.game.board |> Grid.get position of
+        Ok Nothing ->
+            { model
+                | overlay =
+                    position
+                        |> CardSelector
+                        |> Just
             }
 
-        CardSelected cellType ->
-            { state
-                | viewedCard = Just cellType
-            }
+        Ok (Just card) ->
+            { model | overlay = CardDetail card |> Just }
 
-        CloseOverlay ->
-            { state | overlay = Nothing }
+        Err _ ->
+            model
 
-        PickCardToAdd cellType ->
-            state.game
-                |> Game.addCardAndShuffle cellType
-                |> Random.map
-                    (\game ->
-                        { state
-                            | game = game
-                            , overlay = Nothing
-                        }
-                    )
-                |> apply model.seed
+
+viewCard : Card -> Model -> Model
+viewCard card model =
+    { model
+        | overlay = Just (CardDetail card)
+    }
+
+
+closeOverlay : Model -> Model
+closeOverlay model =
+    { model | overlay = Nothing }
+
+
+pickCardToAdd : Card -> Model -> Model
+pickCardToAdd card model =
+    model.game
+        |> Game.addCardAndShuffle card
+        |> Random.map
+            (\game ->
+                { model
+                    | game = game
+                    , overlay = Nothing
+                }
+            )
+        |> apply model.seed
 
 
 
@@ -259,45 +236,60 @@ update msg (({ selected, viewCollection, collection } as state) as model) =
 ----------------------
 
 
-view :
-    (Seed -> msg)
-    -> (Msg -> msg)
+viewGame :
+    { restart : Seed -> msg
+    , placeCard : ( Int, Int ) -> Selected -> msg
+    , viewCard : Card -> msg
+    , selectPositon : ( Int, Int ) -> msg
+    }
     -> Model
     -> Html msg
-view restartMsg msgMapper model =
-    [ [ HeaderView.view
-            (restartMsg model.seed)
-            model.game.score
-      , View.Board.toHtml []
-            { onPress = (\a -> PositionSelected a |> msgMapper) |> Just
-            , onPlace = \a b -> PlaceCard a b |> msgMapper
-            , positionSelected =
-                case model.overlay of
-                    Just (CardSelector position) ->
-                        Just position
+viewGame args model =
+    [ HeaderView.view
+        (args.restart model.seed)
+        model.game.score
+    , View.Board.toHtml []
+        { onPress = (\a -> args.selectPositon a) |> Just
+        , onPlace = \a b -> args.placeCard a b
+        , positionSelected =
+            case model.overlay of
+                Just (CardSelector position) ->
+                    Just position
 
-                    _ ->
-                        Nothing
-            , deck = model.game.deck
-            }
-            model.game.board
-            |> Layout.el Layout.centered
-      , View.Deck.view model.game.deck
-      ]
+                _ ->
+                    Nothing
+        , deck = model.game.deck
+        }
+        model.game.board
+        |> Layout.el Layout.centered
+    , View.Deck.view
+        { viewCard = args.viewCard }
+        model.game.deck
+    ]
         |> Layout.column
             [ Layout.gap Config.bigSpace
             , Html.Attributes.style "padding" (String.fromFloat Config.space ++ "px")
             , Html.Attributes.style "width" (String.fromFloat width ++ "px")
             ]
-    , model.overlay
+
+
+viewOverlay :
+    { restart : Seed -> msg
+    , closeOverlay : msg
+    , selectCardToAdd : Card -> msg
+    }
+    -> Model
+    -> Html msg
+viewOverlay args model =
+    model.overlay
         |> Maybe.map
             (\overlay ->
                 case overlay of
-                    CardDetail cardDetail ->
-                        View.Overlay.cardDetail cardDetail.card
+                    CardDetail card ->
+                        View.Overlay.cardDetail card
                             |> Shade.normal
                                 (Layout.asButton
-                                    { onPress = CloseOverlay |> msgMapper |> Just
+                                    { onPress = args.closeOverlay |> Just
                                     , label = "Dismiss"
                                     }
                                 )
@@ -306,25 +298,19 @@ view restartMsg msgMapper model =
                         Layout.none
                             |> Shade.transparent
                                 (Layout.asButton
-                                    { onPress = CloseOverlay |> msgMapper |> Just
+                                    { onPress = args.closeOverlay |> Just
                                     , label = "Dismiss"
                                     }
                                 )
 
-                    NewCardPicker card ->
+                    DeckCleared card ->
                         card
-                            |> View.Overlay.newCardPicker { select = PickCardToAdd >> msgMapper }
+                            |> View.Overlay.newCardPicker { select = args.selectCardToAdd }
                             |> Shade.success []
 
                     GameFinished ->
-                        View.Overlay.gameover { restartMsg = restartMsg model.seed }
+                        View.Overlay.gameover { restartMsg = args.restart model.seed }
                             { score = model.game.score }
-                            |> Shade.success []
+                            |> Shade.normal []
             )
         |> Maybe.withDefault Layout.none
-    ]
-        |> Html.div
-            [ Html.Attributes.style "width" "100%"
-            , Html.Attributes.style "height" "100%"
-            , Html.Attributes.style "position" "relative"
-            ]
