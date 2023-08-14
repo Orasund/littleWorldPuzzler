@@ -55,7 +55,9 @@ gameover { restartMsg } { score } =
     [ "Game Over" |> Layout.text [ Html.Attributes.style "font-size" Config.titleFontSize ]
     , medal |> Layout.text [ Html.Attributes.style "font-size" Config.titleFontSize ]
     , "Score" |> Layout.text [ Html.Attributes.style "font-size" Config.bigFontSize ]
-    , score |> String.fromInt |> Layout.text [ Html.Attributes.style "font-size" Config.paragraphFontSize ]
+    , score
+        |> String.fromInt
+        |> Layout.text [ Html.Attributes.style "font-size" Config.paragraphFontSize ]
     , text |> Layout.text []
     , { onPress = Just restartMsg
       , label = "Restart"

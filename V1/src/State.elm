@@ -156,7 +156,10 @@ playSecond position cellType ({ game } as state) =
     { state
         | game =
             { game
-                | deck = game.deck |> Deck.playSecond |> Maybe.withDefault game.deck
+                | deck =
+                    game.deck
+                        |> Deck.playSecond
+                        |> Maybe.withDefault game.deck
                 , board = game.board |> Board.place position cellType
             }
         , overlay = Nothing
@@ -185,7 +188,11 @@ updateGame model =
         ( newGame, newCollection ) =
             model.game |> Game.step model.collection
     in
-    if newGame.board |> Grid.emptyPositions |> (==) [] then
+    if
+        newGame.board
+            |> Grid.emptyPositions
+            |> (==) []
+    then
         { model
             | game = newGame
             , overlay = Just GameFinished

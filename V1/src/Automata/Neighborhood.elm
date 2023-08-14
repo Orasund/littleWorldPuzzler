@@ -149,7 +149,11 @@ fullSymmetry maybeCellType { north, east, south, west } { from, to, neighbors } 
                     |> List.filter
                         (\( minN, maybeElem ) ->
                             dict
-                                |> Dict.get (maybeElem |> Maybe.map CellType.name |> Maybe.withDefault "")
+                                |> Dict.get
+                                    (maybeElem
+                                        |> Maybe.map CellType.name
+                                        |> Maybe.withDefault ""
+                                    )
                                 |> Maybe.andThen
                                     (\n ->
                                         if n >= minN then

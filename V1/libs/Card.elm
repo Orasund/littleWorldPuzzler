@@ -34,7 +34,11 @@ view { availableSpace, amount, dim } { attributes, selected, onPress, content } 
             dim
     in
     Element.el
-        [ height * 1.1 |> floor |> Element.px |> Element.height
+        [ height
+            * 1.1
+            |> floor
+            |> Element.px
+            |> Element.height
         , Element.width <|
             Element.px <|
                 if selected then
@@ -59,8 +63,14 @@ view { availableSpace, amount, dim } { attributes, selected, onPress, content } 
 
                   else
                     [ Element.alignBottom ]
-                , [ width |> floor |> Element.px |> Element.width
-                  , height |> floor |> Element.px |> Element.height
+                , [ width
+                        |> floor
+                        |> Element.px
+                        |> Element.width
+                  , height
+                        |> floor
+                        |> Element.px
+                        |> Element.height
                   , Font.alignLeft
                   , Color.lightGrey |> Border.color
                   ]
@@ -91,7 +101,10 @@ hand attributes { dimensions, width, cards } =
                 }
             )
         |> Element.row
-            ([ width |> round |> Element.px |> Element.width
+            ([ width
+                |> round
+                |> Element.px
+                |> Element.width
              , Element.fill |> Element.height
              , Element.centerX
              ]

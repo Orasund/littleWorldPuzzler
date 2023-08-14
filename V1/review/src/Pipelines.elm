@@ -12,8 +12,8 @@ toRule =
         , forbid leftCompositionPipelines
             |> andTryToFixThemBy convertingToRightComposition
             |> andCallThem "no right composition pipes"
-        {-|,forbid rightPizzaPipelines
+        ,forbid rightPizzaPipelines
             |> that (doNot spanMultipleLines |> and (haveMoreStepsThan 1))
             |> andTryToFixThemBy makingMultiline
-            |> andCallThem "single line |> pipeline"--}
+            |> andCallThem "single line |> pipeline"
     ]

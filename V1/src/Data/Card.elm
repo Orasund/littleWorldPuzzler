@@ -46,25 +46,26 @@ deck =
 
 toString : Card -> String
 toString cellType =
-    String.fromChar <|
-        case cellType of
-            Plant ->
-                '🌿'
+    (case cellType of
+        Plant ->
+            '🌿'
 
-            Stone ->
-                '🪨'
+        Stone ->
+            '🪨'
 
-            Mouse ->
-                '🐭'
+        Mouse ->
+            '🐭'
 
-            Cat ->
-                '🐱'
+        Cat ->
+            '🐱'
 
-            Bear ->
-                '🐺'
+        Bear ->
+            '🐺'
 
-            Tree ->
-                '🌳'
+        Tree ->
+            '🌳'
+    )
+        |> String.fromChar
 
 
 name : Card -> String

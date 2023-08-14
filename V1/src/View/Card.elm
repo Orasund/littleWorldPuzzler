@@ -17,8 +17,12 @@ asBigCard attrs cellType =
         width =
             200
     in
-    [ cellType |> CellType.name |> Layout.text []
-    , cellType |> CellType.toString |> Layout.text (Layout.centered ++ [ Html.Attributes.style "font-size" "4rem" ])
+    [ cellType
+        |> CellType.name
+        |> Layout.text []
+    , cellType
+        |> CellType.toString
+        |> Layout.text (Layout.centered ++ [ Html.Attributes.style "font-size" "4rem" ])
     , cellType
         |> asRules
             ([ Html.Attributes.style "font-size" "1.2rem"
@@ -48,8 +52,12 @@ asSmallCard attrs cellType =
         width =
             90
     in
-    [ cellType |> CellType.name |> Layout.text []
-    , cellType |> CellType.toString |> Layout.text (Layout.centered ++ [ Html.Attributes.style "font-size" "3rem" ])
+    [ cellType
+        |> CellType.name
+        |> Layout.text []
+    , cellType
+        |> CellType.toString
+        |> Layout.text (Layout.centered ++ [ Html.Attributes.style "font-size" "3rem" ])
     , cellType
         |> asRules
             ([ Html.Attributes.style "font-size" "0.8rem"

@@ -83,7 +83,13 @@ view :
         }
     -> Element msg
 view attributes (Model model) { msgMapper, placeholder, label } =
-    Input.text (attributes ++ [ LostFocus |> msgMapper |> Events.onLoseFocus ])
+    Input.text
+        (attributes
+            ++ [ LostFocus
+                    |> msgMapper
+                    |> Events.onLoseFocus
+               ]
+        )
         { onChange = ChangedRaw >> msgMapper
         , text = model.raw
         , placeholder = placeholder

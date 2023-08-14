@@ -98,8 +98,12 @@ view attrs args grid =
                                         , onPress = Nothing
                                         }
                                         maybeCellType
-                                    , [ args.deck |> Maybe.map Deck.first |> Maybe.map (Tuple.pair First)
-                                      , args.deck |> Maybe.andThen Deck.second |> Maybe.map (Tuple.pair Second)
+                                    , [ args.deck
+                                            |> Maybe.map Deck.first
+                                            |> Maybe.map (Tuple.pair First)
+                                      , args.deck
+                                            |> Maybe.andThen Deck.second
+                                            |> Maybe.map (Tuple.pair Second)
                                       ]
                                         |> List.filterMap identity
                                         |> View.CardSelector.toHtml { onSelect = args.onPlace a }

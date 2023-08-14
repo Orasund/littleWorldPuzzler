@@ -152,8 +152,14 @@ viewButtonRow { arrangement, scrollPos, labels, positions } =
                            , 10 |> Font.size
                            ]
                     )
-                    { onPress = name |> JumpTo |> Just
-                    , label = name |> labels |> Element.text
+                    { onPress =
+                        name
+                            |> JumpTo
+                            |> Just
+                    , label =
+                        name
+                            |> labels
+                            |> Element.text
                     }
             )
         |> Element.row
